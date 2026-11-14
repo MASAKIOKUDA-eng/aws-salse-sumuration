@@ -1,0 +1,267 @@
+/*
+ * 見た目の方針：営業部の「案件シート」や「商談記録票」。
+ * 紙の地色・墨の文字・罫線・朱の印でまとめ、グラデーション・影・角丸カード・絵文字は使わない。
+ */
+:root {
+  --paper: #f4f1ea;
+  --sheet: #fbfaf6;
+  --ink: #22211f;
+  --ink-2: #4a4741;
+  --muted: #77726a;
+  --rule: #cdc6b6;
+  --rule-strong: #8f887a;
+  --accent: #1f3a5f;
+  --accent-soft: #e6e9ee;
+  --stamp: #b8332a;
+  --good: #2f6b3a;
+  --warn: #8a6200;
+  --bad: #b8332a;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --sans: 'BIZ UDPGothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.75;
+}
+a { color: var(--accent); }
+a:hover { text-decoration-thickness: 2px; }
+h1, h2, h3 { line-height: 1.35; font-weight: 700; margin: 0 0 .6em; }
+h1 { font-size: 1.7rem; letter-spacing: .02em; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 1em; }
+.num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 8px; top: 8px; background: var(--sheet); padding: 4px 8px; z-index: 10; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- ヘッダー ---------- */
+.masthead { border-bottom: 3px double var(--ink); background: var(--paper); }
+.masthead-inner {
+  max-width: 1120px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.brand {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-weight: 600; font-size: 1.1rem; letter-spacing: .04em;
+  color: var(--ink); text-decoration: none;
+}
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a {
+  color: var(--ink-2); text-decoration: none; padding: 4px 10px;
+  border: 1px solid transparent; font-size: .92rem;
+}
+.nav a:hover { border-color: var(--rule); }
+.nav a[aria-current='page'] { border-color: var(--ink); color: var(--ink); background: var(--sheet); }
+.account { margin-left: auto; font-size: .85rem; display: flex; gap: 8px; align-items: center; }
+
+main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+main:focus { outline: none; }
+.colophon {
+  max-width: 1120px; margin: 0 auto; padding: 16px; border-top: 1px solid var(--rule);
+  color: var(--muted); font-size: .8rem;
+}
+
+/* ---------- 部品 ---------- */
+.btn {
+  display: inline-block; font: inherit; font-weight: 700; cursor: pointer;
+  padding: 8px 18px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  text-decoration: none; border-radius: 2px; white-space: nowrap;
+}
+.btn:hover { background: #000; }
+.btn.secondary { background: var(--sheet); color: var(--ink); }
+.btn.secondary:hover { background: #fff; }
+.btn.link { background: none; border: none; color: var(--accent); padding: 0; font-weight: 400; text-decoration: underline; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.sheet { background: var(--sheet); border: 1px solid var(--rule-strong); padding: 20px 22px; }
+.sheet + .sheet { margin-top: 16px; }
+.label {
+  font-size: .75rem; letter-spacing: .12em; color: var(--muted); text-transform: uppercase;
+  font-family: var(--mono); margin-bottom: 4px;
+}
+.rule-title {
+  display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--ink);
+  padding-bottom: 4px; margin: 0 0 12px;
+}
+.rule-title .no { font-family: var(--mono); color: var(--muted); font-size: .85rem; }
+
+table.ledger { width: 100%; border-collapse: collapse; font-size: .92rem; }
+table.ledger th, table.ledger td { border-bottom: 1px solid var(--rule); padding: 7px 8px; text-align: left; vertical-align: top; }
+table.ledger thead th { border-bottom: 1px solid var(--ink); font-size: .78rem; color: var(--muted); font-weight: 400; letter-spacing: .06em; }
+table.ledger tbody th { font-weight: 400; color: var(--muted); white-space: nowrap; width: 7.5em; }
+table.ledger td.r, table.ledger th.r { text-align: right; }
+table.ledger tr.clickable { cursor: pointer; }
+table.ledger tr.clickable:hover td { background: #fff; }
+.table-scroll { overflow-x: auto; }
+
+.tag {
+  display: inline-block; font-size: .75rem; padding: 0 6px; border: 1px solid currentColor;
+  line-height: 1.6; white-space: nowrap;
+}
+.tag.won { color: var(--good); }
+.tag.lost { color: var(--muted); }
+
+/* ---------- ホーム ---------- */
+.home-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; align-items: start; }
+.home-title h1 { font-size: 2.2rem; margin-bottom: .2em; }
+.home-title .sub { font-size: 1.05rem; color: var(--ink-2); margin-bottom: 1.2em; }
+.memo { border-left: 3px solid var(--ink); padding: 2px 0 2px 14px; color: var(--ink-2); }
+.flow-list { counter-reset: f; list-style: none; padding: 0; margin: 0; }
+.flow-list li { counter-increment: f; display: grid; grid-template-columns: 2.4em 1fr; padding: 6px 0; border-bottom: 1px dotted var(--rule); }
+.flow-list li::before { content: counter(f, decimal-leading-zero); font-family: var(--mono); color: var(--muted); }
+
+/* ---------- 商談フェーズ（CRM のパイプライン風） ---------- */
+.pipeline { display: flex; margin: 0 0 20px; padding: 0 6px 0 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.pipeline::-webkit-scrollbar { display: none; }
+.pipeline li {
+  flex: 1 0 auto; position: relative; padding: 6px 14px 6px 22px; font-size: .82rem;
+  background: var(--sheet); border-top: 1px solid var(--rule-strong); border-bottom: 1px solid var(--rule-strong);
+  color: var(--muted); white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+  margin-right: -6px;
+}
+.pipeline li:first-child { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%); padding-left: 12px; border-left: 1px solid var(--rule-strong); }
+.pipeline li.done { background: #e9e5db; color: var(--ink-2); }
+.pipeline li.current { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* ---------- 商談画面 ---------- */
+.play-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+.dealsheet { position: sticky; top: 12px; font-size: .88rem; }
+.dealsheet h2 { font-size: 1rem; }
+.dealsheet .ledger th { width: 5.5em; }
+.notes { list-style: none; margin: 0; padding: 0; }
+.notes li { padding: 6px 0; border-bottom: 1px dotted var(--rule); }
+.notes .src { font-family: var(--mono); font-size: .72rem; color: var(--muted); display: block; }
+.notes .empty { color: var(--muted); }
+
+.step-head { margin-bottom: 14px; }
+.step-head .lead { color: var(--ink-2); }
+.coach { font-size: .88rem; background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; margin: 0 0 16px; }
+.coach strong { font-weight: 700; }
+
+.choices { list-style: none; padding: 0; margin: 0 0 18px; border-top: 1px solid var(--rule); }
+.choice { border-bottom: 1px solid var(--rule); }
+.choice label {
+  display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start;
+  padding: 10px 10px 10px 8px; cursor: pointer; border-left: 3px solid transparent;
+}
+.choice input { margin: 4px 0 0; width: 16px; height: 16px; accent-color: var(--ink); }
+.choice .t { font-weight: 700; }
+.choice .n { display: block; color: var(--muted); font-size: .85rem; font-weight: 400; }
+.choice .side { font-family: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.choice label:hover { background: #fff; }
+.choice input:checked ~ span .t { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.choice:has(input:checked) label { border-left-color: var(--ink); background: #fff; }
+.choice:has(input:disabled:not(:checked)) label { opacity: .45; cursor: not-allowed; }
+.group-title { font-size: .78rem; color: var(--muted); letter-spacing: .08em; padding: 12px 0 4px; border-bottom: 1px solid var(--rule); }
+
+.meter { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font-size: .85rem; margin: 0 0 14px; }
+.meter .track { height: 10px; border: 1px solid var(--ink); background: var(--sheet); position: relative; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.meter .cap { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--stamp); }
+.meter.over .fill { background: var(--stamp); }
+.cost-dots { letter-spacing: 1px; }
+
+.counter { font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+.step-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--ink); padding-top: 14px; flex-wrap: wrap; }
+
+/* 名刺 */
+.card {
+  background: #fff; border: 1px solid var(--rule-strong); padding: 14px 18px 12px;
+  max-width: 360px; aspect-ratio: 91 / 55; display: flex; flex-direction: column; justify-content: space-between;
+}
+.card .co { font-size: .8rem; color: var(--ink-2); }
+.card .ti { font-size: .75rem; color: var(--muted); }
+.card .na { font-size: 1.35rem; letter-spacing: .25em; }
+.card .ad { font-family: var(--mono); font-size: .68rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 4px; }
+
+/* 顧客の発言 */
+.quote { margin: 0 0 16px; padding: 12px 16px; background: #fff; border: 1px solid var(--rule-strong); position: relative; }
+.quote p { margin: 0; font-size: 1.05rem; }
+.quote cite { display: block; font-style: normal; color: var(--muted); font-size: .8rem; margin-top: 6px; }
+
+/* ---------- 結果（案件クローズ報告書） ---------- */
+.report { background: #fff; border: 1px solid var(--ink); padding: 26px 28px; position: relative; }
+.report-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 3px double var(--ink); padding-bottom: 10px; margin-bottom: 18px; }
+.report-head h1 { font-size: 1.4rem; margin: 0; letter-spacing: .3em; }
+.stamp {
+  width: 96px; height: 96px; border: 3px solid var(--stamp); border-radius: 50%;
+  color: var(--stamp); display: grid; place-items: center; transform: rotate(-12deg);
+  font-weight: 700; font-size: 1.5rem; letter-spacing: .1em; flex-shrink: 0;
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px var(--stamp);
+}
+.stamp.lost { color: var(--muted); border-color: var(--muted); box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px var(--muted); }
+.figures { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--ink); margin-bottom: 18px; }
+.figures > div { padding: 10px 12px; border-right: 1px solid var(--rule); }
+.figures > div:last-child { border-right: none; }
+.figures .v { font-family: var(--mono); font-size: 1.6rem; font-weight: 600; line-height: 1.2; }
+.figures .v small { font-size: .8rem; font-weight: 400; }
+.bars td.bar { width: 50%; }
+.bar-track { height: 8px; background: var(--paper); border: 1px solid var(--rule-strong); }
+.bar-fill { height: 100%; background: var(--ink); }
+.reviews { list-style: none; padding: 0; margin: 0; }
+.reviews li { display: grid; grid-template-columns: 1.6em 9em 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px dotted var(--rule); }
+.reviews .mk { font-weight: 700; text-align: center; }
+.reviews .good .mk { color: var(--good); }
+.reviews .warn .mk { color: var(--warn); }
+.reviews .bad .mk { color: var(--bad); }
+.reviews .ar { color: var(--muted); font-size: .85rem; }
+details.model { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 10px; }
+details.model summary { cursor: pointer; font-weight: 700; }
+.save-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.save-form label { display: flex; flex-direction: column; font-size: .85rem; gap: 4px; }
+.save-form input[type='text'] { font: inherit; padding: 7px 10px; border: 1px solid var(--ink); background: #fff; min-width: 14em; border-radius: 0; }
+.notice { padding: 8px 12px; border: 1px solid var(--rule-strong); background: var(--sheet); font-size: .9rem; }
+.notice.error { border-color: var(--bad); color: var(--bad); }
+
+/* ---------- 営業の基本 ---------- */
+.prose { max-width: 760px; }
+.prose h2 { border-bottom: 1px solid var(--ink); padding-bottom: 4px; margin-top: 1.8em; }
+.prose dl { display: grid; grid-template-columns: 11em 1fr; gap: 0; margin: 0 0 1em; border-top: 1px solid var(--rule); }
+.prose dt, .prose dd { margin: 0; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.prose dt { font-weight: 700; padding-right: 12px; }
+
+/* ---------- スマートフォン ---------- */
+@media (max-width: 860px) {
+  .home-grid, .play-grid { grid-template-columns: 1fr; }
+  .dealsheet { position: static; order: 2; }
+  .figures { grid-template-columns: repeat(2, 1fr); }
+  .figures > div:nth-child(2) { border-right: none; }
+  .figures > div:nth-child(-n + 2) { border-bottom: 1px solid var(--rule); }
+}
+@media (max-width: 560px) {
+  body { font-size: 14px; }
+  .masthead-inner { gap: 8px 14px; }
+  .account { margin-left: 0; width: 100%; }
+  .home-title h1 { font-size: 1.8rem; }
+  .sheet, .report { padding: 16px 14px; }
+  .reviews li { grid-template-columns: 1.4em 1fr; }
+  .reviews .ar { grid-column: 2; }
+  .reviews .tx { grid-column: 2; }
+  .prose dl { grid-template-columns: 1fr; }
+  .prose dt { border-bottom: none; padding-bottom: 0; }
+  .stamp { width: 74px; height: 74px; font-size: 1.15rem; }
+  .note-col { display: none; }
+  .report-head h1 { letter-spacing: .08em; font-size: 1.2rem; }
+  .pipeline li { font-size: .75rem; padding: 5px 10px 5px 18px; }
+}
+@media print {
+  .masthead, .colophon, .step-nav, .save-area { display: none; }
+}
+
+/* サービス選択中も費用メーターが見えるように */
+#step-extra:not(:empty) { position: sticky; top: 0; z-index: 1; background: var(--paper); padding: 8px 0 2px; }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deal Room | AWS ソリューション営業 商談シミュレーター</title>
+  <meta name="description" content="架空の顧客との商談を通して、AWS ソリューション営業の考え方（ヒアリング・提案・費用・反論処理・クロージング）を学ぶシミュレーター。">
+  <meta name="theme-color" content="#f4f1ea">
+  <link rel="icon" href="/images/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#app">本文へ移動</a>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="#/"><img src="/images/mark.svg" width="26" height="26" alt="">Deal Room</a>
+      <nav class="nav" aria-label="メイン">
+        <a href="#/" data-route="home">案件一覧</a>
+        <a href="#/play" data-route="play">商談</a>
+        <a href="#/learn" data-route="learn">営業の基本</a>
+        <a href="#/board" data-route="board">成績表</a>
+      </nav>
+      <div class="account" id="account" aria-live="polite"></div>
+    </div>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer class="colophon">
+    <p>JAWS-UG Sales 支部 × 彩の国埼玉支部 English LT Night（2026-11-20）向けの学習用シミュレーターです。
+      登場する企業・人物は架空で、採点は考え方を学ぶための簡略モデルです。AWS の公式見解ではありません。</p>
+  </footer>
+</body>
+</html>
