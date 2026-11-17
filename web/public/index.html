@@ -9,27 +9,28 @@
   <link rel="icon" href="/images/mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body>
-  <a class="skip" href="#app">本文へ移動</a>
+  <a class="skip" href="#app" data-i18n="skip">本文へ移動</a>
   <header class="masthead">
     <div class="masthead-inner">
       <a class="brand" href="#/"><img src="/images/mark.svg" width="26" height="26" alt="">Deal Room</a>
       <nav class="nav" aria-label="メイン">
-        <a href="#/" data-route="home">案件一覧</a>
-        <a href="#/play" data-route="play">商談</a>
-        <a href="#/learn" data-route="learn">営業の基本</a>
-        <a href="#/board" data-route="board">成績表</a>
+        <a href="#/" data-route="home" data-i18n="navHome">案件一覧</a>
+        <a href="#/play" data-route="play" data-i18n="navPlay">商談</a>
+        <a href="#/learn" data-route="learn" data-i18n="navLearn">営業の基本</a>
+        <a href="#/board" data-route="board" data-i18n="navBoard">成績表</a>
       </nav>
+      <button class="btn link lang-toggle" type="button" data-act="lang" lang="en" aria-label="Switch to English">English</button>
       <div class="account" id="account" aria-live="polite"></div>
     </div>
   </header>
   <main id="app" tabindex="-1"></main>
   <footer class="colophon">
-    <p>JAWS-UG Sales 支部 × 彩の国埼玉支部 English LT Night（2026-11-20）向けの学習用シミュレーターです。
+    <p data-i18n="footer">JAWS-UG Sales 支部 × 彩の国埼玉支部 English LT Night（2026-11-20）向けの学習用シミュレーターです。
       登場する企業・人物は架空で、採点は考え方を学ぶための簡略モデルです。AWS の公式見解ではありません。</p>
   </footer>
 </body>

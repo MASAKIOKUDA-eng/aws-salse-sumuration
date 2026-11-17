@@ -1,5 +1,6 @@
 import type { DealResult, Decisions, Rank, ScenarioId } from '../../shared/engine';
 import { accessToken, forgetSession } from './auth';
+import { lang, t } from './i18n';
 
 /** API のエラー。401 はログインが必要（またはセッション切れ） */
 export class ApiError extends Error {
@@ -14,7 +15,7 @@ export class ApiError extends Error {
 // CloudFront OAC が Authorization ヘッダーを使うため、独自ヘッダーでトークンを送る
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await accessToken();
-  if (!token) throw new ApiError('ログインが必要です', 401);
+  if (!token) throw new ApiError(t().apiCodes.login_required, 401);
   return { 'x-auth-token': token };
 }
 
@@ -50,9 +51,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     // JSON 以外（ローカル開発で API がない場合など）
   }
   if (!res.ok || data === null) {
-    const msg = (data as { message?: string } | null)?.message;
+    const body = data as { message?: string; code?: string } | null;
     if (res.status === 401) forgetSession();
-    throw new ApiError(msg ?? `記録サーバーに接続できませんでした（${res.status}）`, res.status);
+    // サーバーの文言は日本語のため、コードがあれば選んだ言語の文言に置き換える
+    const msg = (body?.code && t().apiCodes[body.code]) || (lang() === 'ja' ? body?.message : undefined);
+    throw new ApiError(msg ?? t().apiUnreachable(res.status), res.status);
   }
   return data as T;
 }

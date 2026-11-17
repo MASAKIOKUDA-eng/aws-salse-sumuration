@@ -19,6 +19,8 @@
   --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --sans: 'BIZ UDPGothic', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', Meiryo, sans-serif;
 }
+/* 英語表示では欧文フォントを優先する（和文フォントの ’ や “ は全角幅で表示されるため） */
+html[lang='en'] { --sans: 'IBM Plex Sans', system-ui, 'BIZ UDPGothic', sans-serif; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -65,7 +67,8 @@ p { margin: 0 0 1em; }
 }
 .nav a:hover { border-color: var(--rule); }
 .nav a[aria-current='page'] { border-color: var(--ink); color: var(--ink); background: var(--sheet); }
-.account { margin-left: auto; font-size: .85rem; display: flex; gap: 8px; align-items: center; }
+.lang-toggle { margin-left: auto; font-size: .85rem; }
+.account { font-size: .85rem; display: flex; gap: 8px; align-items: center; }
 
 main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
 main:focus { outline: none; }
@@ -198,6 +201,8 @@ table.ledger tr.clickable:hover td { background: #fff; }
 .report { background: #fff; border: 1px solid var(--ink); padding: 26px 28px; position: relative; }
 .report-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 3px double var(--ink); padding-bottom: 10px; margin-bottom: 18px; }
 .report-head h1 { font-size: 1.4rem; margin: 0; letter-spacing: .3em; }
+/* 和文向けの広い字間は、欧文では単語が読みにくくなる */
+html[lang='en'] .report-head h1, html[lang='en'] .card .na { letter-spacing: .02em; }
 .stamp {
   width: 96px; height: 96px; border: 3px solid var(--stamp); border-radius: 50%;
   color: var(--stamp); display: grid; place-items: center; transform: rotate(-12deg);

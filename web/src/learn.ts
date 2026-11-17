@@ -1,5 +1,13 @@
+import type { Lang } from '../../shared/engine';
+
 /** 「営業の基本」ページ。シミュレーターの各判断の背景にある考え方をまとめる */
-export function learnPage(): string {
+export function learnPage(lang: Lang = 'ja'): string {
+  return lang === 'en' ? LEARN_EN : LEARN_JA;
+}
+
+const LEARN_JA = learnJa();
+
+function learnJa(): string {
   return `<article class="prose">
   <div class="label">Field Guide</div>
   <h1>AWS ソリューション営業の基本</h1>
@@ -57,3 +65,60 @@ export function learnPage(): string {
   <p><a class="btn" href="#/">案件を選ぶ</a></p>
   </article>`;
 }
+
+const LEARN_EN = `<article class="prose">
+  <div class="label">Field Guide</div>
+  <h1>AWS Solution Sales Basics</h1>
+  <p>The decisions in this simulator are based on ideas commonly used in cloud solution sales.
+    This page summarizes them briefly. It is simplified for learning and is not a description of AWS’s official sales methodology.</p>
+
+  <h2>1. Who does what</h2>
+  <dl>
+    <dt>Account Manager</dt><dd>Owns the customer relationship and the whole deal. Understands the customer’s business and brings people together inside and outside AWS to shape the proposal. This is your role in the game.</dd>
+    <dt>Solutions Architect</dt><dd>The technical partner. Turns the customer’s requirements into an architecture and shows what is possible.</dd>
+    <dt>Specialist</dt><dd>Brings deep knowledge of a specific field such as IoT, generative AI or analytics, and backs it with references and proofs of concept.</dd>
+    <dt>AWS Partner</dt><dd>Systems integrators and others who build, run and migrate systems. They work hands-on for the customer and stay with them for the long run.</dd>
+    <dt>Professional Services</dt><dd>A team that works directly with the customer on large migrations, governance design and similar efforts.</dd>
+  </dl>
+
+  <h2>2. Listen: a framework for discovery</h2>
+  <p>The basic framework is <strong>BANT</strong> (Budget, Authority, Need, Timeline).
+    For larger deals, <strong>MEDDICC</strong> is also common: it covers metrics, the decision criteria and process, the pain, an internal champion and the competition.</p>
+  <p>What matters is not asking everything, but asking first about <strong>what will drive this customer’s decision</strong>. With a cost-conscious decision maker, ask how they decide; on an urgent deal, confirm the deadline first.</p>
+
+  <h2>3. Put the problem into words</h2>
+  <p>“The servers are old” and “we don’t have enough people” are symptoms. A proposal starts from <strong>what that does to the business</strong>: lost sales, lower utilization, risk to business continuity.
+    Decision makers judge in business terms, not technical ones.</p>
+
+  <h2>4. Propose: a right-sized solution and approach</h2>
+  <p>First assemble the pieces the problem cannot be solved without, then add pieces that make operations and migration easier. Listing unrelated services blurs the focus of the proposal and inflates the cost.</p>
+  <dl>
+    <dt>AWS Well-Architected</dt><dd>A framework for reviewing an architecture against six pillars: operational excellence, security, reliability, performance efficiency, cost optimization and sustainability.</dd>
+    <dt>PoCs and workshops</dt><dd>New initiatives get approved more easily when you try them small and show the value in numbers.</dd>
+    <dt>Phased migration</dt><dd>Plan migrations of existing systems in the order assess → mobilize → migrate. AWS has programs that support migrations (such as the Migration Acceleration Program).</dd>
+  </dl>
+
+  <h2>5. Pricing: what to do before discounting</h2>
+  <dl>
+    <dt>On-Demand</dt><dd>Pay only for what you use. Suits the stage when usage is not yet clear.</dd>
+    <dt>Savings Plans and Reserved</dt><dd>Commit to one or three years of usage for a lower rate. Suits stable workloads with predictable usage.</dd>
+    <dt>Programs</dt><dd>Migration support programs and startup credits (AWS Activate), among others. Eligibility and terms change over time, so always check the latest information.</dd>
+    <dt>TCO (total cost of ownership)</dt><dd>Compare not unit prices but everything: operations, maintenance, staff, hardware refreshes and the cost of downtime.</dd>
+  </dl>
+
+  <h2>6. Answer objections</h2>
+  <p>An objection is a sign of interest. Don’t deny it or overpower it; acknowledge the concern and answer with <strong>evidence</strong> and a <strong>next step</strong>.</p>
+  <dl>
+    <dt>Security</dt><dd>Explain the <strong>shared responsibility model</strong> (AWS is responsible for security <em>of</em> the cloud; the customer for security <em>in</em> the cloud), and show third-party audit reports (available in AWS Artifact) and material on meeting industry guidelines.</dd>
+    <dt>Lack of skills</dt><dd>Combine training (such as AWS Skill Builder) with partner support, turning “we don’t have anyone” into a plan to grow people.</dd>
+    <dt>Price comparisons</dt><dd>Move the comparison from unit prices to TCO and value. Don’t criticize competitors.</dd>
+    <dt>Lock-in</dt><dd>Show portable technology options, and compare the development speed gained from managed services with the future cost of moving, so the customer can decide.</dd>
+  </dl>
+
+  <h2>7. Closing</h2>
+  <p>The customer is the one who decides to buy. A <strong>mutual action plan</strong> — writing down together who needs to confirm what, and by when — helps the customer decide while keeping you in control of the deal.
+    If the chief executive makes the call, creating a conversation between executives is the shortest path.</p>
+
+  <p class="muted small" style="margin-top:2em">Service and program names are based on public information as of November 2026. Check the official AWS website for the latest details.</p>
+  <p><a class="btn" href="#/">Choose a lead</a></p>
+  </article>`;

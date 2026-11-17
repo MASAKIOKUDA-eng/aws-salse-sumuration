@@ -1,40 +1,29 @@
 import {
   APPROACH_IDS,
-  APPROACH_LABEL,
-  BUDGET_LABEL,
   CLOSE_IDS,
-  CLOSE_LABEL,
-  COMPETITOR_LABEL,
   type Conditions,
   type DealResult,
   type Decisions,
-  OBJECTIONS,
   PICK,
   PRICING_IDS,
-  PRICING_LABEL,
   PROBLEM_IDS,
   QUESTION_IDS,
-  QUESTION_LABEL,
   RESEARCH_IDS,
-  RESEARCH_LABEL,
   RESPONSE_IDS,
   type ResponseId,
-  SCENARIOS,
   SCENARIO_IDS,
-  SERVICES,
   SERVICE_IDS,
-  STANCE_LABEL,
   type ScenarioId,
   type ServiceId,
   TEAM_IDS,
-  TEAM_LABEL,
-  URGENCY_LABEL,
   bestDecisions,
   budgetCap,
   conditionsFromSeed,
+  content,
   costOf,
   objectionsFor,
   randomSeed,
+  rankOf,
   seedForScenario,
   simulate,
   validateDecisions,
@@ -42,6 +31,7 @@ import {
 } from '../../shared/engine';
 import { ApiError, type DealSummary, getDeal, leaderboard, listDeals, listMine, saveDeal } from './api';
 import { authEnabled, currentEmail, initAuth, isLoggedIn, login, logout } from './auth';
+import { applyStatic, lang, locale, setLang, t } from './i18n';
 import { learnPage } from './learn';
 // favicon・ヘッダーのマーク。import するとハッシュ付きの名前で出力され、index.html に書き込まれる
 import markUrl from './images/mark.svg';
@@ -54,7 +44,8 @@ document.querySelector<HTMLImageElement>('.brand img')?.setAttribute('src', mark
 const esc = (s: unknown) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-const yen = (man: number) => `${man.toLocaleString('ja-JP')}<small> 万円/年</small>`;
+/** 選んだ言語のシナリオ・選択肢の文言 */
+const C = () => content(lang());
 
 const store = {
   get(key: string): string | null {
@@ -101,14 +92,15 @@ const STEPS = [
 ] as const;
 type StepId = (typeof STEPS)[number];
 
-const PHASES: { name: string; steps: StepId[] }[] = [
-  { name: '準備', steps: ['brief', 'research', 'team'] },
-  { name: 'ヒアリング', steps: ['questions', 'problem'] },
-  { name: '提案', steps: ['services', 'approach'] },
-  { name: '見積', steps: ['pricing'] },
-  { name: '交渉', steps: ['objection0', 'objection1'] },
-  { name: 'クロージング', steps: ['close'] },
-  { name: '結果', steps: ['result'] },
+/** フェーズの名前は i18n の phases と同じ並び */
+const PHASES: StepId[][] = [
+  ['brief', 'research', 'team'],
+  ['questions', 'problem'],
+  ['services', 'approach'],
+  ['pricing'],
+  ['objection0', 'objection1'],
+  ['close'],
+  ['result'],
 ];
 
 const SESSION_KEY = 'dealroom.session';
@@ -151,34 +143,19 @@ function known(c: Conditions, s: Session) {
   };
 }
 
-const BUDGET_LINE = {
-  tight: '正直なところ、予算はかなり厳しいです。',
-  normal: '相場の範囲であれば検討できます。',
-  ample: '効果が見込めるなら、予算は確保できます。',
-};
-const COMPETITOR_LINE = {
-  none: '今のところ、他社とは話していません。',
-  onprem: '既存の SI さんからは、サーバー更改の見積もりをもらっています。',
-  othercloud: '実は、他社クラウドの提案も受けています。',
-};
-const URGENCY_LINE = {
-  low: '半年から 1 年かけて、慎重に進めたいと考えています。',
-  high: 'できるだけ早く、3 か月以内には動き出したいです。',
-};
-
 function answerFor(c: Conditions, q: (typeof QUESTION_IDS)[number]): string {
-  const base = SCENARIOS[c.scenario].answers[q];
+  const base = C().SCENARIOS[c.scenario].answers[q];
   // 条件によって変わる一言を、発言の括弧の中に足す
-  const add = (line: string) => base.replace(/」$/, `${line}」`);
-  if (q === 'budget') return add(BUDGET_LINE[c.budget]);
-  if (q === 'decision') return add(COMPETITOR_LINE[c.competitor]);
-  if (q === 'timeline') return add(URGENCY_LINE[c.urgency]);
+  const add = (line: string) => t().appendToQuote(base, line);
+  if (q === 'budget') return add(t().budgetLine[c.budget]);
+  if (q === 'decision') return add(t().competitorLine[c.competitor]);
+  if (q === 'timeline') return add(t().urgencyLine[c.urgency]);
   return base;
 }
 
 function researchFor(c: Conditions, r: (typeof RESEARCH_IDS)[number]): string {
-  const base = SCENARIOS[c.scenario].research[r];
-  if (r === 'vendor') return `${base} 競合の状況：${COMPETITOR_LABEL[c.competitor]}。`;
+  const base = C().SCENARIOS[c.scenario].research[r];
+  if (r === 'vendor') return t().vendorCompetition(base, C().COMPETITOR_LABEL[c.competitor]);
   return base;
 }
 
@@ -198,16 +175,16 @@ function renderAccount() {
     return;
   }
   if (isLoggedIn()) {
-    el.innerHTML = `<span class="muted">${esc(currentEmail() ?? 'ログイン中')}</span><button class="btn link" data-act="logout">ログアウト</button>`;
+    el.innerHTML = `<span class="muted">${esc(currentEmail() ?? t().loggedIn)}</span><button class="btn link" data-act="logout">${esc(t().logout)}</button>`;
   } else {
-    el.innerHTML = `<button class="btn link" data-act="login">ログイン / 新規登録</button>`;
+    el.innerHTML = `<button class="btn link" data-act="login">${esc(t().loginSignup)}</button>`;
   }
 }
 
 function card(c: Conditions): string {
-  const sc = SCENARIOS[c.scenario];
+  const sc = C().SCENARIOS[c.scenario];
   const p = sc.contacts[c.stance];
-  return `<div class="card" aria-label="名刺">
+  return `<div class="card" aria-label="${esc(t().cardLabel)}">
     <div><div class="co">${esc(sc.company)}</div><div class="ti">${esc(p.title)}</div></div>
     <div class="na">${esc(p.name)}</div>
     <div class="ad">${esc(sc.industry)}</div>
@@ -215,39 +192,43 @@ function card(c: Conditions): string {
 }
 
 function contactName(c: Conditions) {
-  const p = SCENARIOS[c.scenario].contacts[c.stance];
-  return `${p.name}（${p.title}）`;
+  const p = C().SCENARIOS[c.scenario].contacts[c.stance];
+  return t().contact(p.name, p.title);
 }
 
 function dealSheet(c: Conditions, s: Session): string {
-  const sc = SCENARIOS[c.scenario];
+  const T = C();
+  const u = t();
+  const sc = T.SCENARIOS[c.scenario];
   const k = known(c, s);
-  const unk = '<span class="muted">未確認</span>';
+  const unk = `<span class="muted">${esc(u.unknown)}</span>`;
   const notes: string[] = [];
   if (s.step > STEPS.indexOf('research'))
-    for (const r of s.d.research ?? []) notes.push(`<li><span class="src">調査｜${esc(RESEARCH_LABEL[r].name)}</span>${esc(researchFor(c, r))}</li>`);
+    for (const r of s.d.research ?? [])
+      notes.push(`<li><span class="src">${esc(u.srcResearch)}｜${esc(T.RESEARCH_LABEL[r].name)}</span>${esc(researchFor(c, r))}</li>`);
   if (s.step > STEPS.indexOf('questions'))
-    for (const q of s.d.questions ?? []) notes.push(`<li><span class="src">ヒアリング｜${esc(QUESTION_LABEL[q].frame)}</span>${esc(answerFor(c, q))}</li>`);
-  return `<aside class="dealsheet sheet" aria-label="案件シート">
+    for (const q of s.d.questions ?? [])
+      notes.push(`<li><span class="src">${esc(u.srcQuestion)}｜${esc(T.QUESTION_LABEL[q].frame)}</span>${esc(answerFor(c, q))}</li>`);
+  return `<aside class="dealsheet sheet" aria-label="${esc(u.dealSheetLabel)}">
     <div class="label">Deal Sheet</div>
     <h2>${esc(sc.company)}</h2>
     <table class="ledger"><tbody>
-      <tr><th>業種</th><td>${esc(sc.industry)}</td></tr>
-      <tr><th>規模</th><td>${esc(sc.employees)}</td></tr>
-      <tr><th>面談相手</th><td>${esc(contactName(c))}<br><span class="muted small">${esc(STANCE_LABEL[c.stance])}</span></td></tr>
-      <tr><th>予算感</th><td>${k.budget ? esc(BUDGET_LABEL[c.budget]) : unk}</td></tr>
-      <tr><th>競合</th><td>${k.competitor ? esc(COMPETITOR_LABEL[c.competitor]) : unk}</td></tr>
-      <tr><th>時期</th><td>${k.urgency ? esc(URGENCY_LABEL[c.urgency]) : unk}</td></tr>
+      <tr><th>${esc(u.sheet.industry)}</th><td>${esc(sc.industry)}</td></tr>
+      <tr><th>${esc(u.sheet.size)}</th><td>${esc(sc.employees)}</td></tr>
+      <tr><th>${esc(u.sheet.contact)}</th><td>${esc(contactName(c))}<br><span class="muted small">${esc(T.STANCE_LABEL[c.stance])}</span></td></tr>
+      <tr><th>${esc(u.sheet.budget)}</th><td>${k.budget ? esc(T.BUDGET_LABEL[c.budget]) : unk}</td></tr>
+      <tr><th>${esc(u.sheet.competitor)}</th><td>${k.competitor ? esc(T.COMPETITOR_LABEL[c.competitor]) : unk}</td></tr>
+      <tr><th>${esc(u.sheet.timeline)}</th><td>${k.urgency ? esc(T.URGENCY_LABEL[c.urgency]) : unk}</td></tr>
     </tbody></table>
-    <h3 style="margin-top:14px">分かったこと</h3>
-    <ul class="notes">${notes.join('') || '<li class="empty">まだありません。調査とヒアリングで書き込まれます。</li>'}</ul>
+    <h3 style="margin-top:14px">${esc(u.learned)}</h3>
+    <ul class="notes">${notes.join('') || `<li class="empty">${esc(u.learnedEmpty)}</li>`}</ul>
   </aside>`;
 }
 
 function pipeline(step: StepId): string {
-  const idx = PHASES.findIndex((p) => p.steps.includes(step));
-  return `<ol class="pipeline" aria-label="商談フェーズ">${PHASES.map(
-    (p, i) => `<li class="${i < idx ? 'done' : i === idx ? 'current' : ''}"${i === idx ? ' aria-current="step"' : ''}>${esc(p.name)}</li>`,
+  const idx = PHASES.findIndex((p) => p.includes(step));
+  return `<ol class="pipeline" aria-label="${esc(t().pipelineLabel)}">${PHASES.map(
+    (_, i) => `<li class="${i < idx ? 'done' : i === idx ? 'current' : ''}"${i === idx ? ' aria-current="step"' : ''}>${esc(t().phases[i])}</li>`,
   ).join('')}</ol>`;
 }
 
@@ -273,7 +254,7 @@ function choiceList(name: string, options: Option[], multi: boolean, selected: r
   return `<ul class="choices" role="${multi ? 'group' : 'radiogroup'}">${items.join('')}</ul>`;
 }
 
-const dots = (n: number) => `<span class="cost-dots" aria-label="費用 ${n}">${'■'.repeat(n)}${'□'.repeat(4 - n)}</span>`;
+const dots = (n: number) => `<span class="cost-dots" aria-label="${esc(t().costDots(n))}">${'■'.repeat(n)}${'□'.repeat(4 - n)}</span>`;
 
 // ---------- 各ステップ ----------
 
@@ -291,7 +272,9 @@ interface StepView {
 }
 
 function stepView(c: Conditions, s: Session): StepView {
-  const sc = SCENARIOS[c.scenario];
+  const T = C();
+  const S = t().steps;
+  const sc = T.SCENARIOS[c.scenario];
   const d = s.d;
   const id = STEPS[s.step];
   const no = String(s.step).padStart(2, '0');
@@ -299,29 +282,29 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'brief':
       return {
         no,
-        title: '案件の概要',
-        lead: 'インバウンドの問い合わせから、初回の商談が決まりました。あなたは AWS のアカウントマネージャーです。',
+        title: S.brief.title,
+        lead: S.brief.lead,
         body: `<div class="sheet" style="margin-bottom:16px">
             <div class="label">Inbound Lead</div>
             <h2>${esc(sc.company)}</h2>
             <p>${esc(sc.summary)}</p>
             <p class="muted small">${esc(sc.industry)}／${esc(sc.employees)}</p>
           </div>
-          <h3>面談の相手</h3>
+          <h3>${esc(S.brief.meet)}</h3>
           ${card(c)}
-          <p class="small muted" style="margin-top:8px">${esc(STANCE_LABEL[c.stance])}。予算・競合・時期は、まだ分かっていません。</p>`,
-        coach: '<strong>この商談で評価されること</strong>：顧客理解 25%・提案の適合 30%・経済性 20%・信頼構築 25%。高いサービスを並べるほど良いわけではありません。',
+          <p class="small muted" style="margin-top:8px">${esc(S.brief.unknownYet(T.STANCE_LABEL[c.stance]))}</p>`,
+        coach: S.brief.coach,
         ready: () => true,
       };
     case 'research':
       return {
         no,
-        title: '事前調査',
-        lead: '商談の前に、何を調べておきますか。時間が限られているため 2 つだけ選べます。',
-        coach: '公開情報から「顧客が何に投資しようとしているか」「今のシステムを誰がいつまで支えるか」をつかむと、提案のタイミングが見えてきます。',
+        title: S.research.title,
+        lead: S.research.lead,
+        coach: esc(S.research.coach),
         body: choiceList(
           'research',
-          RESEARCH_IDS.map((r) => ({ id: r, title: RESEARCH_LABEL[r].name, note: RESEARCH_LABEL[r].note })),
+          RESEARCH_IDS.map((r) => ({ id: r, title: T.RESEARCH_LABEL[r].name, note: T.RESEARCH_LABEL[r].note })),
           true,
           d.research ?? [],
         ),
@@ -331,12 +314,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'team':
       return {
         no,
-        title: '同行メンバー',
-        lead: '初回の商談に誰を連れて行きますか。2 人まで選べます。',
-        coach: 'アカウントマネージャーは「顧客との関係と商談全体」の責任者です。技術・専門領域・構築・大規模移行は、それぞれ得意なメンバーに任せます。',
+        title: S.team.title,
+        lead: S.team.lead,
+        coach: esc(S.team.coach),
         body: choiceList(
           'team',
-          TEAM_IDS.map((t) => ({ id: t, title: TEAM_LABEL[t].name, note: TEAM_LABEL[t].note })),
+          TEAM_IDS.map((x) => ({ id: x, title: T.TEAM_LABEL[x].name, note: T.TEAM_LABEL[x].note })),
           true,
           d.team ?? [],
         ),
@@ -346,12 +329,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'questions':
       return {
         no,
-        title: 'ヒアリング',
-        lead: `${contactName(c)}との面談時間は 30 分。聞けるのは 3 つです。`,
-        coach: '予算（Budget）・決裁（Authority）・ニーズ（Need）・時期（Timeline）を確かめる BANT は基本の型です。答えは右の案件シートに書き込まれ、後の判断の材料になります。',
+        title: S.questions.title,
+        lead: S.questions.lead(contactName(c)),
+        coach: esc(S.questions.coach),
         body: choiceList(
           'questions',
-          QUESTION_IDS.map((q) => ({ id: q, title: `「${QUESTION_LABEL[q].name}」`, note: QUESTION_LABEL[q].frame })),
+          QUESTION_IDS.map((q) => ({ id: q, title: t().q(T.QUESTION_LABEL[q].name), note: T.QUESTION_LABEL[q].frame })),
           true,
           d.questions ?? [],
         ),
@@ -361,12 +344,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'problem':
       return {
         no,
-        title: '課題の整理',
-        lead: 'ヒアリングの内容から、この顧客の「本当の課題」を 1 つに絞ってください。提案はここから組み立てます。',
-        coach: '「サーバーが古い」は症状です。それによって事業に何が起きているか（売上・稼働率・事業継続）まで言えると、決裁者に届く提案になります。',
+        title: S.problem.title,
+        lead: S.problem.lead,
+        coach: esc(S.problem.coach),
         body: `<div class="quote" style="margin-bottom:16px">${
-          (d.questions ?? []).map((q) => `<p style="margin-bottom:6px">${esc(answerFor(c, q))}</p>`).join('') || '<p>（ヒアリングの記録はありません）</p>'
-        }<cite>${esc(contactName(c))}との面談メモ</cite></div>${choiceList(
+          (d.questions ?? []).map((q) => `<p style="margin-bottom:6px">${esc(answerFor(c, q))}</p>`).join('') || `<p>${esc(S.problem.noNotes)}</p>`
+        }<cite>${esc(S.problem.notesCite(contactName(c)))}</cite></div>${choiceList(
           'problem',
           PROBLEM_IDS.map((p) => ({ id: p, title: sc.problems[p].text })),
           false,
@@ -378,17 +361,17 @@ function stepView(c: Conditions, s: Session): StepView {
       const k = known(c, s);
       return {
         no,
-        title: '提案の構成',
-        lead: '課題を解くために提案するサービスを選んでください（1〜5 つ）。',
-        coach: 'まず課題を解くのに欠かせない部品を揃え、次に運用や移行を楽にする部品を足します。関係の薄いサービスは提案の焦点をぼかします。',
+        title: S.services.title,
+        lead: S.services.lead,
+        coach: esc(S.services.coach),
         body: choiceList(
           'services',
           SERVICE_IDS.map((sv) => ({
             id: sv,
-            title: SERVICES[sv].name,
-            note: SERVICES[sv].summary,
-            side: dots(SERVICES[sv].cost),
-            group: SERVICES[sv].category,
+            title: T.SERVICES[sv].name,
+            note: T.SERVICES[sv].summary,
+            side: dots(T.SERVICES[sv].cost),
+            group: T.SERVICES[sv].category,
           })),
           true,
           d.services ?? [],
@@ -401,11 +384,11 @@ function stepView(c: Conditions, s: Session): StepView {
           const scale = 18;
           const over = k.budget && cost > cap;
           return `<div class="meter${over ? ' over' : ''}" aria-live="polite">
-            <span>構成の費用 <span class="num">${cost}</span></span>
+            <span>${esc(S.services.cost)} <span class="num">${cost}</span></span>
             <span class="track"><span class="fill" style="width:${Math.min(100, (cost / scale) * 100)}%"></span>${
-              k.budget ? `<span class="cap" style="left:${(cap / scale) * 100}%" title="予算感"></span>` : ''
+              k.budget ? `<span class="cap" style="left:${(cap / scale) * 100}%" title="${esc(S.services.cap)}"></span>` : ''
             }</span>
-            <span>${k.budget ? `予算感 <span class="num">${cap}</span>` : '<span class="muted">予算感は未確認</span>'}</span>
+            <span>${k.budget ? `${esc(S.services.cap)} <span class="num">${cap}</span>` : `<span class="muted">${esc(S.services.capUnknown)}</span>`}</span>
           </div>`;
         },
       };
@@ -413,12 +396,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'approach':
       return {
         no,
-        title: '進め方',
-        lead: 'どのように導入を進める提案にしますか。',
-        coach: '決裁者が「承認しやすい」最初の一歩を設計するのも営業の仕事です。新しい取り組みは効果を確かめる段階を、既存システムの移行は計画を立てる段階を置くと進みやすくなります。',
+        title: S.approach.title,
+        lead: S.approach.lead,
+        coach: esc(S.approach.coach),
         body: choiceList(
           'approach',
-          APPROACH_IDS.map((a) => ({ id: a, title: APPROACH_LABEL[a].name, note: APPROACH_LABEL[a].note })),
+          APPROACH_IDS.map((a) => ({ id: a, title: T.APPROACH_LABEL[a].name, note: T.APPROACH_LABEL[a].note })),
           false,
           d.approach ? [d.approach] : [],
         ),
@@ -427,12 +410,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'pricing':
       return {
         no,
-        title: '費用の提示',
-        lead: '見積もりをどのように出しますか。',
-        coach: '値引きの前に、料金プラン（長期利用割引）や、移行・スタートアップ向けの支援策が使えないか考えます。使い方が決まっていない段階で長期の約束を求めるのは早すぎます。',
+        title: S.pricing.title,
+        lead: S.pricing.lead,
+        coach: esc(S.pricing.coach),
         body: choiceList(
           'pricing',
-          PRICING_IDS.map((p) => ({ id: p, title: PRICING_LABEL[p].name, note: PRICING_LABEL[p].note })),
+          PRICING_IDS.map((p) => ({ id: p, title: T.PRICING_LABEL[p].name, note: T.PRICING_LABEL[p].note })),
           false,
           d.pricing ? [d.pricing] : [],
         ),
@@ -441,14 +424,14 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'objection0':
     case 'objection1': {
       const i = id === 'objection0' ? 0 : 1;
-      const o = OBJECTIONS[objectionsFor(c)[i]];
+      const o = T.OBJECTIONS[objectionsFor(c)[i]];
       const cur = d.responses?.[i];
       return {
         no,
-        title: `反論への対応 ${i + 1}／2：${o.title}`,
-        lead: '提案の説明を終えると、こう返されました。',
-        coach: '反論は「関心がある」サインです。否定や断言で押し切らず、懸念を受け止めて、根拠のある情報や次の一歩で応えます。',
-        body: `<blockquote class="quote"><p>「${esc(o.line)}」</p><cite>${esc(contactName(c))}</cite></blockquote>${choiceList(
+        title: S.objection.title(i + 1, o.title),
+        lead: S.objection.lead,
+        coach: esc(S.objection.coach),
+        body: `<blockquote class="quote"><p>${esc(t().q(o.line))}</p><cite>${esc(contactName(c))}</cite></blockquote>${choiceList(
           `response${i}`,
           RESPONSE_IDS.map((r) => ({ id: r, title: o.responses[r].text })),
           false,
@@ -460,12 +443,12 @@ function stepView(c: Conditions, s: Session): StepView {
     case 'close':
       return {
         no,
-        title: 'クロージング',
-        lead: '商談の最後に、次の一歩をどう決めますか。',
-        coach: '受注は「顧客が決める」ものです。誰が・いつまでに・何を確かめれば決められるかを、顧客と一緒に書き出せると確度が上がります。',
+        title: S.close.title,
+        lead: S.close.lead,
+        coach: esc(S.close.coach),
         body: choiceList(
           'close',
-          CLOSE_IDS.map((x) => ({ id: x, title: CLOSE_LABEL[x].name, note: CLOSE_LABEL[x].note })),
+          CLOSE_IDS.map((x) => ({ id: x, title: T.CLOSE_LABEL[x].name, note: T.CLOSE_LABEL[x].note })),
           false,
           d.close ? [d.close] : [],
         ),
@@ -525,7 +508,7 @@ function refreshStep(c: Conditions, s: Session) {
     const count = inputs.filter((i) => i.checked).length;
     inputs.forEach((i) => (i.disabled = !i.checked && count >= v.max!.n));
     const counter = app.querySelector('.counter');
-    if (counter) counter.textContent = `${count} / ${v.max.n} 選択`;
+    if (counter) counter.textContent = t().selected(count, v.max.n);
   }
   const extra = app.querySelector('#step-extra');
   if (extra && v.extra) extra.innerHTML = v.extra();
@@ -536,8 +519,9 @@ function refreshStep(c: Conditions, s: Session) {
 function renderPlay() {
   setNav('play');
   if (!session) {
-    app.innerHTML = `<div class="sheet"><h1>商談</h1><p>進行中の商談はありません。</p>
-      <div class="btn-row"><a class="btn" href="#/">案件を選ぶ</a><button class="btn secondary" data-act="random">ランダムな案件で始める</button></div></div>`;
+    const u = t();
+    app.innerHTML = `<div class="sheet"><h1>${esc(u.playTitle)}</h1><p>${esc(u.noSession)}</p>
+      <div class="btn-row"><a class="btn" href="#/">${esc(u.pickLead)}</a><button class="btn secondary" data-act="random">${esc(u.startRandom)}</button></div></div>`;
     return;
   }
   const s = session;
@@ -561,10 +545,10 @@ function renderPlay() {
         <form id="step-form" onsubmit="return false">${v.body}</form>
         <div class="step-nav">
           <div class="btn-row">
-            ${s.step > 0 ? '<button class="btn secondary" data-act="back">戻る</button>' : ''}
+            ${s.step > 0 ? `<button class="btn secondary" data-act="back">${esc(t().back)}</button>` : ''}
             ${v.max ? `<span class="counter"></span>` : ''}
           </div>
-          <button class="btn" data-act="next">${s.step === 0 ? '商談を始める' : isLast ? '商談を終える' : '次へ'}</button>
+          <button class="btn" data-act="next">${esc(s.step === 0 ? t().begin : isLast ? t().finish : t().next)}</button>
         </div>
       </section>
     </div>`;
@@ -574,73 +558,74 @@ function renderPlay() {
 // ---------- 結果 ----------
 
 const MARK = { good: '○', warn: '△', bad: '×' } as const;
-const AXES = [
-  ['discovery', '顧客理解', '事前調査・ヒアリング・課題の特定'],
-  ['fit', '提案の適合', 'サービス構成・進め方・同行メンバー'],
-  ['commercial', '経済性', '費用の出し方・予算との整合'],
-  ['trust', '信頼構築', '反論への対応・クロージング'],
-] as const;
+const AXES = ['discovery', 'fit', 'commercial', 'trust'] as const;
 
 function decisionsTable(c: Conditions, d: Decisions): string {
+  const T = C();
+  const u = t();
   const objs = objectionsFor(c);
   const rows: [string, string][] = [
-    ['事前調査', d.research.map((r) => RESEARCH_LABEL[r].name).join('、')],
-    ['同行メンバー', d.team.map((t) => TEAM_LABEL[t].name).join('、')],
-    ['ヒアリング', d.questions.map((q) => QUESTION_LABEL[q].frame).join('、')],
-    ['課題', SCENARIOS[c.scenario].problems[d.problem].text],
-    ['提案構成', d.services.map((s) => SERVICES[s].name).join('、')],
-    ['進め方', APPROACH_LABEL[d.approach].name],
-    ['費用', PRICING_LABEL[d.pricing].name],
-    ...objs.map((o, i): [string, string] => [`反論：${OBJECTIONS[o].title}`, OBJECTIONS[o].responses[d.responses[i]].text]),
-    ['クロージング', CLOSE_LABEL[d.close].name],
+    [u.dt.research, u.list(d.research.map((r) => T.RESEARCH_LABEL[r].name))],
+    [u.dt.team, u.list(d.team.map((x) => T.TEAM_LABEL[x].name))],
+    [u.dt.questions, u.list(d.questions.map((q) => T.QUESTION_LABEL[q].frame))],
+    [u.dt.problem, T.SCENARIOS[c.scenario].problems[d.problem].text],
+    [u.dt.services, u.list(d.services.map((s) => T.SERVICES[s].name))],
+    [u.dt.approach, T.APPROACH_LABEL[d.approach].name],
+    [u.dt.pricing, T.PRICING_LABEL[d.pricing].name],
+    ...objs.map((o, i): [string, string] => [u.dt.objection(T.OBJECTIONS[o].title), T.OBJECTIONS[o].responses[d.responses[i]].text]),
+    [u.dt.close, T.CLOSE_LABEL[d.close].name],
   ];
   return `<table class="ledger"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function report(c: Conditions, d: Decisions, r: DealResult, opts: { player?: string; date?: string } = {}): string {
-  const sc = SCENARIOS[c.scenario];
+  const T = C();
+  const u = t();
+  const R = u.report;
+  const sc = T.SCENARIOS[c.scenario];
   const model = bestDecisions(c);
+  const stamp = r.won ? R.won : R.lost;
   return `<article class="report">
     <div class="report-head">
       <div>
         <div class="label">Deal Close Report</div>
-        <h1>案件クローズ報告書</h1>
-        <p class="small muted" style="margin:6px 0 0">${esc(sc.company)}／${esc(contactName(c))}${
-          opts.player ? `<br>担当：${esc(opts.player)}` : ''
-        }${opts.date ? `　${esc(new Date(opts.date).toLocaleString('ja-JP'))}` : ''}</p>
+        <h1>${esc(R.title)}</h1>
+        <p class="small muted" style="margin:6px 0 0">${esc(sc.company)} / ${esc(contactName(c))}${
+          opts.player ? `<br>${esc(R.owner(opts.player))}` : ''
+        }${opts.date ? `　${esc(new Date(opts.date).toLocaleString(locale()))}` : ''}</p>
       </div>
-      <div class="stamp${r.won ? '' : ' lost'}" role="img" aria-label="${r.won ? '受注' : '失注'}">${r.won ? '受注' : '失注'}</div>
+      <div class="stamp${r.won ? '' : ' lost'}" role="img" aria-label="${esc(stamp)}">${esc(stamp)}</div>
     </div>
     <div class="figures">
       <div><div class="label">Score</div><div class="v">${r.total}<small> /100</small></div></div>
       <div><div class="label">Win Rate</div><div class="v">${r.winProbability}<small> %</small></div></div>
-      <div><div class="label">ARR</div><div class="v">${r.won ? yen(r.arr) : '—'}</div></div>
+      <div><div class="label">ARR</div><div class="v">${r.won ? u.yen(r.arr) : '—'}</div></div>
       <div><div class="label">Rank</div><div class="v">${r.rank}</div><div class="small">${esc(r.title)}</div></div>
     </div>
-    <table class="ledger bars"><thead><tr><th>評価軸</th><th class="note-col">内容</th><th class="r">点</th><th></th></tr></thead><tbody>
+    <table class="ledger bars"><thead><tr><th>${esc(R.axis)}</th><th class="note-col">${esc(R.detail)}</th><th class="r">${esc(R.points)}</th><th></th></tr></thead><tbody>
       ${AXES.map(
-        ([k, name, note]) =>
-          `<tr><th style="color:var(--ink)">${name}</th><td class="small muted note-col">${note}</td><td class="r num">${r.scores[k]}</td>
+        (k) =>
+          `<tr><th style="color:var(--ink)">${esc(u.axes[k][0])}</th><td class="small muted note-col">${esc(u.axes[k][1])}</td><td class="r num">${r.scores[k]}</td>
            <td class="bar"><div class="bar-track"><div class="bar-fill" style="width:${r.scores[k]}%"></div></div></td></tr>`,
       ).join('')}
     </tbody></table>
 
-    <h2 style="margin-top:22px">マネージャーからのフィードバック</h2>
+    <h2 style="margin-top:22px">${esc(R.feedback)}</h2>
     <ul class="reviews">${r.reviews
       .map((x) => `<li class="${x.tone}"><span class="mk" aria-label="${x.tone}">${MARK[x.tone]}</span><span class="ar">${esc(x.area)}</span><span class="tx">${esc(x.text)}</span></li>`)
       .join('')}</ul>
 
-    <h2 style="margin-top:22px">案件の条件</h2>
+    <h2 style="margin-top:22px">${esc(R.conditions)}</h2>
     <table class="ledger"><tbody>
-      <tr><th>面談相手</th><td>${esc(STANCE_LABEL[c.stance])}</td></tr>
-      <tr><th>予算感</th><td>${esc(BUDGET_LABEL[c.budget])}（費用 <span class="num">${r.cost}</span>／予算感 <span class="num">${r.cap}</span>）</td></tr>
-      <tr><th>競合</th><td>${esc(COMPETITOR_LABEL[c.competitor])}</td></tr>
-      <tr><th>時期</th><td>${esc(URGENCY_LABEL[c.urgency])}</td></tr>
+      <tr><th>${esc(u.sheet.contact)}</th><td>${esc(T.STANCE_LABEL[c.stance])}</td></tr>
+      <tr><th>${esc(u.sheet.budget)}</th><td>${R.budgetVsCost(esc(T.BUDGET_LABEL[c.budget]), r.cost, r.cap)}</td></tr>
+      <tr><th>${esc(u.sheet.competitor)}</th><td>${esc(T.COMPETITOR_LABEL[c.competitor])}</td></tr>
+      <tr><th>${esc(u.sheet.timeline)}</th><td>${esc(T.URGENCY_LABEL[c.urgency])}</td></tr>
     </tbody></table>
 
-    <details class="model"><summary>あなたの判断</summary>${decisionsTable(c, d)}</details>
-    <details class="model"><summary>模範的な進め方（${model.result.total} 点）</summary>
-      <p class="small muted">この条件で最も点が高くなる判断の一例です。現実の商談に唯一の正解はありません。</p>
+    <details class="model"><summary>${esc(R.yours)}</summary>${decisionsTable(c, d)}</details>
+    <details class="model"><summary>${esc(R.model(model.result.total))}</summary>
+      <p class="small muted">${esc(R.modelNote)}</p>
       ${decisionsTable(c, model.decisions)}
     </details>
   </article>`;
@@ -654,33 +639,34 @@ function renderResultScreen(c: Conditions, s: Session) {
     renderPlay();
     return;
   }
-  const r = simulate(c, v.value);
+  const r = simulate(c, v.value, lang());
+  const u = t().result;
   app.innerHTML = `${pipeline('result')}${report(c, v.value, r)}
     <section class="sheet save-area" style="margin-top:16px" aria-labelledby="save-title">
-      <h2 id="save-title">成績表に記録する</h2>
+      <h2 id="save-title">${esc(u.saveTitle)}</h2>
       <div id="save-body">${saveBody(s)}</div>
     </section>
     <div class="btn-row" style="margin-top:16px">
-      <button class="btn secondary" data-act="retry">同じ条件でやり直す</button>
-      <button class="btn secondary" data-act="random">別の案件へ</button>
-      <a class="btn secondary" href="#/learn">営業の基本を読む</a>
+      <button class="btn secondary" data-act="retry">${esc(u.retry)}</button>
+      <button class="btn secondary" data-act="random">${esc(u.another)}</button>
+      <a class="btn secondary" href="#/learn">${esc(u.readLearn)}</a>
     </div>`;
 }
 
 function saveBody(s: Session): string {
+  const u = t().result;
   if (s.savedId)
-    return `<p>記録しました。<a href="#/deal/${esc(s.savedId)}">記録を見る</a>／<a href="#/board">成績表へ</a></p>`;
-  if (!authEnabled())
-    return '<p class="notice">ローカル環境（npm run dev）では記録できません。デプロイした環境でお試しください。</p>';
+    return `<p>${esc(u.saved)} <a href="#/deal/${esc(s.savedId)}">${esc(u.viewRecord)}</a> / <a href="#/board">${esc(u.toBoard)}</a></p>`;
+  if (!authEnabled()) return `<p class="notice">${esc(u.local)}</p>`;
   if (!isLoggedIn())
-    return `<p>記録にはログインが必要です（メールアドレスで登録できます）。ログイン後、この画面に戻ります。</p>
-      <button class="btn" data-act="login">ログインして記録する</button>`;
+    return `<p>${esc(u.needLogin)}</p>
+      <button class="btn" data-act="login">${esc(u.loginToSave)}</button>`;
   const name = store.get(NAME_KEY) ?? '';
   return `<form class="save-form" id="save-form">
-      <label>担当者名（成績表に表示されます）<input type="text" name="playerName" maxlength="20" required value="${esc(name)}"></label>
-      <button class="btn" type="submit">記録する</button>
+      <label>${esc(u.playerName)}<input type="text" name="playerName" maxlength="20" required value="${esc(name)}"></label>
+      <button class="btn" type="submit">${esc(u.save)}</button>
     </form>
-    <p class="small muted" style="margin-top:8px">点数はサーバーで計算し直してから保存します。記録は 90 日で自動的に削除されます。</p>
+    <p class="small muted" style="margin-top:8px">${esc(u.saveNote)}</p>
     <p id="save-msg" aria-live="polite"></p>`;
 }
 
@@ -691,7 +677,7 @@ async function submitSave(form: HTMLFormElement) {
   const v = validateDecisions(session.d);
   if (!playerName || !v.ok) {
     msg.className = 'notice error';
-    msg.textContent = '担当者名を入力してください';
+    msg.textContent = t().result.enterName;
     return;
   }
   store.set(NAME_KEY, playerName);
@@ -704,7 +690,7 @@ async function submitSave(form: HTMLFormElement) {
   } catch (err) {
     form.querySelector('button')!.disabled = false;
     msg.className = 'notice error';
-    msg.textContent = err instanceof ApiError ? err.message : '記録に失敗しました';
+    msg.textContent = err instanceof ApiError ? err.message : t().result.saveFailed;
     if (err instanceof ApiError && err.status === 401) renderAccount();
   }
 }
@@ -714,35 +700,32 @@ async function submitSave(form: HTMLFormElement) {
 function renderHome() {
   setNav('home');
   const ongoing = session && STEPS[session.step] !== 'result' ? conditionsFromSeed(session.seed) : null;
+  const SC = C().SCENARIOS;
+  const h = t().home;
   app.innerHTML = `<div class="home-grid">
     <section class="home-title">
       <div class="label">AWS Solution Sales Simulator</div>
       <h1>Deal Room</h1>
-      <p class="sub">架空の顧客との商談を 1 件、10 分で。<br>AWS ソリューション営業の「考え方」を、判断しながら学びます。</p>
-      <p class="memo">高いサービスを並べても受注できません。調べる・聞く・課題を言葉にする・身の丈に合った提案をする・反論に根拠で答える・次の一歩を一緒に決める。評価されるのはその積み重ねです。</p>
+      <p class="sub">${h.sub}</p>
+      <p class="memo">${esc(h.memo)}</p>
       <div class="btn-row" style="margin:18px 0 26px">
-        ${ongoing ? `<a class="btn" href="#/play">続きから（${esc(SCENARIOS[ongoing.scenario].company)}）</a>` : ''}
-        <button class="btn${ongoing ? ' secondary' : ''}" data-act="random">ランダムな案件で始める</button>
+        ${ongoing ? `<a class="btn" href="#/play">${esc(h.resume(SC[ongoing.scenario].company))}</a>` : ''}
+        <button class="btn${ongoing ? ' secondary' : ''}" data-act="random">${esc(t().startRandom)}</button>
       </div>
-      <h2>商談の流れ</h2>
+      <h2>${esc(h.flowTitle)}</h2>
       <ol class="flow-list">
-        <li><span>事前調査と同行メンバーを決める</span></li>
-        <li><span>ヒアリングで 3 つ質問し、課題を 1 つに絞る</span></li>
-        <li><span>サービスの構成と進め方を提案する</span></li>
-        <li><span>費用の出し方を決める</span></li>
-        <li><span>2 つの反論に答える</span></li>
-        <li><span>クロージングで次の一歩を決める</span></li>
+        ${h.flow.map((x) => `<li><span>${esc(x)}</span></li>`).join('')}
       </ol>
     </section>
     <section class="sheet" aria-labelledby="leads-title">
       <div class="label">Open Leads</div>
-      <h2 id="leads-title">案件一覧</h2>
-      <p class="small muted">案件を選ぶと、面談相手・予算・競合などの条件はランダムに決まります。</p>
-      <div class="table-scroll"><table class="ledger"><thead><tr><th>顧客</th><th>業種</th><th></th></tr></thead><tbody>
+      <h2 id="leads-title">${esc(h.leadsTitle)}</h2>
+      <p class="small muted">${esc(h.leadsNote)}</p>
+      <div class="table-scroll"><table class="ledger"><thead><tr><th>${esc(h.customer)}</th><th>${esc(h.industry)}</th><th></th></tr></thead><tbody>
         ${SCENARIO_IDS.map(
-          (id) => `<tr><td><strong>${esc(SCENARIOS[id].company)}</strong><br><span class="small muted">${esc(SCENARIOS[id].employees)}</span></td>
-            <td class="small">${esc(SCENARIOS[id].industry)}</td>
-            <td class="r"><button class="btn secondary" data-act="start" data-scenario="${id}">担当する</button></td></tr>`,
+          (id) => `<tr><td><strong>${esc(SC[id].company)}</strong><br><span class="small muted">${esc(SC[id].employees)}</span></td>
+            <td class="small">${esc(SC[id].industry)}</td>
+            <td class="r"><button class="btn secondary" data-act="start" data-scenario="${id}">${esc(h.take)}</button></td></tr>`,
         ).join('')}
       </tbody></table></div>
     </section>
@@ -751,22 +734,24 @@ function renderHome() {
 
 // ---------- 成績表・記録 ----------
 
-const scenarioName = (id: ScenarioId) => SCENARIOS[id]?.company ?? id;
+const scenarioName = (id: ScenarioId) => C().SCENARIOS[id]?.company ?? id;
 
 function dealRows(items: DealSummary[], ranked: boolean): string {
-  if (items.length === 0) return '<p class="muted">まだ記録がありません。</p>';
+  const u = t();
+  const B = u.board;
+  if (items.length === 0) return `<p class="muted">${esc(B.empty)}</p>`;
   return `<div class="table-scroll"><table class="ledger"><thead><tr>
-    ${ranked ? '<th class="r">#</th>' : ''}<th>担当</th><th>顧客</th><th>結果</th><th class="r">点</th><th class="r">ARR（万円）</th><th>日時</th>
+    ${ranked ? '<th class="r">#</th>' : ''}<th>${esc(B.player)}</th><th>${esc(B.customer)}</th><th>${esc(B.result)}</th><th class="r">${esc(B.points)}</th><th class="r">${esc(u.arrHead)}</th><th>${esc(B.date)}</th>
   </tr></thead><tbody>${items
     .map(
       (it, i) => `<tr class="clickable" data-href="#/deal/${esc(it.id)}">
       ${ranked ? `<td class="r num">${i + 1}</td>` : ''}
       <td><a href="#/deal/${esc(it.id)}">${esc(it.playerName)}</a></td>
       <td class="small">${esc(scenarioName(it.scenario))}</td>
-      <td><span class="tag ${it.won ? 'won' : 'lost'}">${it.won ? '受注' : '失注'}</span> <span class="num">${esc(it.rank)}</span></td>
+      <td><span class="tag ${it.won ? 'won' : 'lost'}">${esc(it.won ? u.report.won : u.report.lost)}</span> <span class="num">${esc(it.rank)}</span></td>
       <td class="r num">${esc(it.total)}</td>
-      <td class="r num">${it.won ? Number(it.arr).toLocaleString('ja-JP') : '—'}</td>
-      <td class="small num">${esc(new Date(it.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }))}</td>
+      <td class="r num">${it.won ? esc(u.arrCell(Number(it.arr))) : '—'}</td>
+      <td class="small num">${esc(new Date(it.createdAt).toLocaleString(locale(), { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }))}</td>
     </tr>`,
     )
     .join('')}</tbody></table></div>`;
@@ -774,17 +759,19 @@ function dealRows(items: DealSummary[], ranked: boolean): string {
 
 async function renderBoard() {
   setNav('board');
-  app.innerHTML = `<h1>成績表</h1>
-    <section class="sheet"><h2>上位 10 件</h2><div id="board-top"><p class="muted">読み込み中…</p></div></section>
-    ${isLoggedIn() ? '<section class="sheet"><h2>自分の記録</h2><div id="board-mine"><p class="muted">読み込み中…</p></div></section>' : ''}
-    <section class="sheet"><h2>最近の商談</h2><div id="board-recent"><p class="muted">読み込み中…</p></div></section>`;
+  const B = t().board;
+  const loading = `<p class="muted">${esc(B.loading)}</p>`;
+  app.innerHTML = `<h1>${esc(B.title)}</h1>
+    <section class="sheet"><h2>${esc(B.top)}</h2><div id="board-top">${loading}</div></section>
+    ${isLoggedIn() ? `<section class="sheet"><h2>${esc(B.mine)}</h2><div id="board-mine">${loading}</div></section>` : ''}
+    <section class="sheet"><h2>${esc(B.recent)}</h2><div id="board-recent">${loading}</div></section>`;
   const fill = async (id: string, load: () => Promise<{ items: DealSummary[] }>, ranked = false) => {
     const el = document.getElementById(id);
     if (!el) return;
     try {
       el.innerHTML = dealRows((await load()).items, ranked);
     } catch (err) {
-      el.innerHTML = `<p class="notice error">${esc(err instanceof ApiError ? err.message : '読み込めませんでした')}</p>`;
+      el.innerHTML = `<p class="notice error">${esc(err instanceof ApiError ? err.message : B.loadFailed)}</p>`;
     }
   };
   await Promise.all([fill('board-top', leaderboard, true), fill('board-recent', () => listDeals(20)), fill('board-mine', listMine)]);
@@ -792,17 +779,23 @@ async function renderBoard() {
 
 async function renderDeal(id: string) {
   setNav('board');
-  app.innerHTML = '<p class="muted">読み込み中…</p>';
+  const B = t().board;
+  app.innerHTML = `<p class="muted">${esc(B.loading)}</p>`;
   try {
     const rec = await getDeal(id);
     const c = conditionsFromSeed(rec.seed);
-    app.innerHTML = `${report(c, rec.decisions, rec.result, { player: rec.playerName, date: rec.createdAt })}
+    // 保存された結果のフィードバックは日本語のため、日本語以外では判断内容から文章だけ作り直す（点数は保存値）
+    const result: DealResult =
+      lang() === 'ja'
+        ? rec.result
+        : { ...rec.result, reviews: simulate(c, rec.decisions, lang()).reviews, title: rankOf(rec.result.total, lang()).title };
+    app.innerHTML = `${report(c, rec.decisions, result, { player: rec.playerName, date: rec.createdAt })}
       <div class="btn-row" style="margin-top:16px">
-        <button class="btn" data-act="challenge" data-seed="${rec.seed}">同じ案件・同じ条件に挑戦する</button>
-        <a class="btn secondary" href="#/board">成績表へ戻る</a>
+        <button class="btn" data-act="challenge" data-seed="${rec.seed}">${esc(B.challenge)}</button>
+        <a class="btn secondary" href="#/board">${esc(B.backToBoard)}</a>
       </div>`;
   } catch (err) {
-    app.innerHTML = `<p class="notice error">${esc(err instanceof ApiError ? err.message : '読み込めませんでした')}</p><p><a href="#/board">成績表へ戻る</a></p>`;
+    app.innerHTML = `<p class="notice error">${esc(err instanceof ApiError ? err.message : B.loadFailed)}</p><p><a href="#/board">${esc(B.backToBoard)}</a></p>`;
   }
 }
 
@@ -815,7 +808,7 @@ function route() {
   if (hash === '#/play') renderPlay();
   else if (hash === '#/learn') {
     setNav('learn');
-    app.innerHTML = learnPage();
+    app.innerHTML = learnPage(lang());
   } else if (hash === '#/board') void renderBoard();
   else if (deal) void renderDeal(deal[1]);
   else renderHome();
@@ -833,7 +826,10 @@ document.addEventListener('click', (e) => {
   const btn = target.closest<HTMLElement>('[data-act]');
   if (!btn) return;
   const act = btn.dataset.act;
-  if (act === 'login') void login(location.hash);
+  if (act === 'lang') {
+    setLang(lang() === 'ja' ? 'en' : 'ja');
+    route();
+  } else if (act === 'login') void login(location.hash);
   else if (act === 'logout') logout();
   else if (act === 'random') startSession(randomSeed());
   else if (act === 'start') startSession(seedForScenario(btn.dataset.scenario as ScenarioId));
@@ -869,4 +865,5 @@ app.addEventListener('submit', (e) => {
 
 window.addEventListener('hashchange', route);
 
+applyStatic();
 void initAuth().then(route);
