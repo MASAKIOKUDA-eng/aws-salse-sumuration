@@ -1,0 +1,70 @@
+# cdkd deploy log
+started_at: 2026-11-17T14:20:37Z
+commit:     747e341 (feature/deal-room-simulator) (未コミットの変更あり)
+region:     ap-northeast-1
+caller:     arn:aws:sts::<ACCOUNT_ID>:assumed-role/EC2-Administrator-Access/i-0f97674804a3a4735
+command:    cdkd deploy --all 
+----------------------------------------
+built /home/ec2-user/aws-salse-sumuration/web/dist
+Synthesizing CDK app...
+Bundling asset DealRoom/ApiFunction/Code/Stage...
+...dd88dd31c23705f347f8443affd7572170d24c87c2d2f03-building/index.js  64.9kb
+
+⚡ Done in 40ms
+[Warning at /DealRoom/Distribution] Ignoring 'minimumProtocolVersion': it has no effect without a custom 'certificate'. The distribution uses the CloudFront default certificate, whose security policy is fixed at TLSv1. [ack: @aws-cdk/aws-cloudfront:minimumProtocolVersionWithoutCertificate]
+
+Deploying stack: DealRoom
+A previous deploy of DealRoom failed and was automatically rolled back. The failed resource may be partially applied — revert it, or continue deploying to fix forward (a successful deploy clears this note).
+Revert it with: cdkd rollback DealRoom --revert-failed
+Users0A0EEA89 (AWS::Cognito::UserPool) was left in AWS by an earlier rollback as ap-northeast-1_UZBCFitgd (DeletionPolicy: Retain). This deploy does not take it back: it creates a new resource under a new name, as CloudFormation does. To manage the kept resource again, adopt it with 'cdkd import'.
+DealRecordsE92ACED8 (AWS::DynamoDB::Table) was left in AWS by an earlier rollback as DealRoom-DealRecordsE92ACED8-43d519718cde (DeletionPolicy: Retain). This deploy does not take it back: it creates a new resource under a new name, as CloudFormation does. To manage the kept resource again, adopt it with 'cdkd import'.
+Changes: 28 to create, 0 to update, 0 to delete
+Deploying 28 resource(s) (DAG: 7 levels, max parallel: 20)
+[1/28] ✓ DistributionOrigin1S3OriginAccessControlEB606076 (AWS::CloudFront::OriginAccessControl) created
+[2/28] ✓ DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1 (AWS::CloudFront::OriginAccessControl) created
+[3/28] ✓ CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092 (AWS::IAM::Role) created
+[4/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F (AWS::IAM::Role) created
+[5/28] ✓ ApiFunctionServiceRole52B9747B (AWS::IAM::Role) created
+[6/28] ✓ Users0A0EEA89 (AWS::Cognito::UserPool) created
+[7/28] ✓ ApiLogs3D05D88B (AWS::Logs::LogGroup) created
+[8/28] ✓ ApiCachePolicyF71AA3E6 (AWS::CloudFront::CachePolicy) created
+[9/28] ✓ SiteBucket397A1860 (AWS::S3::Bucket) created
+[10/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleDefaultPolicyE5468F0E (AWS::IAM::Policy) created
+[11/28] ✓ UsersLoginDomain920528C5 (AWS::Cognito::UserPoolDomain) created
+[12/28] ✓ DeployAssetsAwsCliLayer986E51B7 (AWS::Lambda::LayerVersion) created
+[13/28] ✓ CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F (AWS::Lambda::Function) created
+[14/28] ✓ DealRecordsE92ACED8 (AWS::DynamoDB::Table) created
+[15/28] ✓ ApiFunctionServiceRoleDefaultPolicy20A32B8D (AWS::IAM::Policy) created
+[16/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiB5F7BD223 (AWS::Lambda::Function) created
+[17/28] ✓ ApiFunctionCE271BD4 (AWS::Lambda::Function) created
+[18/28] ✓ ApiFunctionFunctionUrl73AD62DC (AWS::Lambda::Url) created
+CloudFront Distribution Distribution830FAC52 accepted (not waiting for Deployed; pass --full-wait to wait). To wait manually: aws cloudfront wait distribution-deployed --id E8P3QTC5GRV6C
+[19/28] ✓ Distribution830FAC52 (AWS::CloudFront::Distribution) created
+[20/28] ✓ DistributionOrigin2InvokeFromApiForDealRoomDistributionOrigin25C254B4744C50812 (AWS::Lambda::Permission) created
+[21/28] ✓ DistributionOrigin2InvokeFunctionFromCloudFrontForDealRoomDistributionOrigin25C254B473DDB2117 (AWS::Lambda::Permission) created
+[22/28] ✓ SiteBucketPolicy3AC1D0F8 (AWS::S3::BucketPolicy) created
+[23/28] ✓ UsersWebClient8EE36D42 (AWS::Cognito::UserPoolClient) created
+[24/28] ✓ SiteBucketAutoDeleteObjectsCustomResource9585E968 (Custom::S3AutoDeleteObjects) created
+[25/28] ✓ LoginBranding (AWS::Cognito::ManagedLoginBranding) created
+[26/28] ✓ DeployAssetsCustomResource256MiBAD7FBCF5 (Custom::CDKBucketDeployment) created
+[27/28] ✓ DeploySiteAwsCliLayer88B0EBE2 (AWS::Lambda::LayerVersion) created
+[28/28] ✓ DeploySiteCustomResource256MiB2424C2DD (Custom::CDKBucketDeployment) created
+
+Deployment Summary:
+  Stack: DealRoom
+  Created: 28
+  Updated: 0
+  Deleted: 0
+  Unchanged: 0
+  Duration: 89.18s
+
+Outputs:
+  DealRoom.SiteUrl = https://d3l3nlz69g93wy.cloudfront.net
+  DealRoom.TableName = DealRoom-DealRecordsE92ACED8-ad3dd0cba799
+  DealRoom.UserPoolId = ap-northeast-1_nPpv1osMr
+
+✓ Deployment completed successfully
+----------------------------------------
+finished_at: 2026-11-17T14:22:32Z
+duration:    111s
+result:      成功

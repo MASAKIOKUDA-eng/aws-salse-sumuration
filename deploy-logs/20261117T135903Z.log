@@ -1,0 +1,7 @@
+# cdkd deploy log
+started_at: 2026-11-17T13:59:03Z
+commit:     747e341 (feature/deal-room-simulator)
+region:     ap-northeast-1
+caller:     arn:aws:sts::<ACCOUNT_ID>:assumed-role/EC2-Administrator-Access/i-0f97674804a3a4735
+command:    cdkd deploy --all 
+----------------------------------------

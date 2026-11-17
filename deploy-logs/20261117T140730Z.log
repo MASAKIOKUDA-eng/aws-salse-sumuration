@@ -1,0 +1,26 @@
+# cdkd deploy log
+started_at: 2026-11-17T14:07:30Z
+commit:     747e341 (feature/deal-room-simulator)
+region:     ap-northeast-1
+caller:     arn:aws:sts::<ACCOUNT_ID>:assumed-role/EC2-Administrator-Access/i-0f97674804a3a4735
+command:    cdkd deploy --all 
+----------------------------------------
+built /home/ec2-user/aws-salse-sumuration/web/dist
+Synthesizing CDK app...
+Bundling asset DealRoom/ApiFunction/Code/Stage...
+...dd88dd31c23705f347f8443affd7572170d24c87c2d2f03-building/index.js  64.9kb
+
+⚡ Done in 19ms
+[Warning at /DealRoom/Distribution] Ignoring 'minimumProtocolVersion': it has no effect without a custom 'certificate'. The distribution uses the CloudFront default certificate, whose security policy is fixed at TLSv1. [ack: @aws-cdk/aws-cloudfront:minimumProtocolVersionWithoutCertificate]
+
+Deploying stack: DealRoom
+Stack DealRoom (ap-northeast-1) is locked by ec2-user@ip-172-31-41-17.ec2.internal:607432 (operation: deploy). Lock expires in 27m36s. Retrying in 2s... (attempt 1/3)
+Stack DealRoom (ap-northeast-1) is locked by ec2-user@ip-172-31-41-17.ec2.internal:607432 (operation: deploy). Lock expires in 27m34s. Retrying in 2s... (attempt 2/3)
+Stack DealRoom (ap-northeast-1) is locked by ec2-user@ip-172-31-41-17.ec2.internal:607432 (operation: deploy). Lock expires in 27m32s. Retrying in 2s... (attempt 3/3)
+Failed: stack:DealRoom: Failed to acquire lock for stack DealRoom (ap-northeast-1) after 4 attempts. Locked by: ec2-user@ip-172-31-41-17.ec2.internal:607432, operation: deploy, expires in 27m30s. If you are certain no other process is active, run: cdkd force-unlock DealRoom --stack-region ap-northeast-1
+Error: 1 node(s) failed:
+  - stack:DealRoom: Failed to acquire lock for stack DealRoom (ap-northeast-1) after 4 attempts. Locked by: ec2-user@ip-172-31-41-17.ec2.internal:607432, operation: deploy, expires in 27m30s. If you are certain no other process is active, run: cdkd force-unlock DealRoom --stack-region ap-northeast-1
+----------------------------------------
+finished_at: 2026-11-17T14:07:57Z
+duration:    24s
+result:      失敗（exit 1）
