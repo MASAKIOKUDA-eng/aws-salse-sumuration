@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/build-web.mjs", "--serve"],
+      "port": 8000
+    }
+  ]
+}

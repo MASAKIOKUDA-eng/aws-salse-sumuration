@@ -1,0 +1,55 @@
+# cdkd deploy log
+started_at: 2026-11-17T14:08:18Z
+commit:     747e341 (feature/deal-room-simulator)
+region:     ap-northeast-1
+caller:     arn:aws:sts::<ACCOUNT_ID>:assumed-role/EC2-Administrator-Access/i-0f97674804a3a4735
+command:    cdkd deploy --all 
+----------------------------------------
+built /home/ec2-user/aws-salse-sumuration/web/dist
+Synthesizing CDK app...
+Bundling asset DealRoom/ApiFunction/Code/Stage...
+...dd88dd31c23705f347f8443affd7572170d24c87c2d2f03-building/index.js  64.9kb
+
+⚡ Done in 19ms
+[Warning at /DealRoom/Distribution] Ignoring 'minimumProtocolVersion': it has no effect without a custom 'certificate'. The distribution uses the CloudFront default certificate, whose security policy is fixed at TLSv1. [ack: @aws-cdk/aws-cloudfront:minimumProtocolVersionWithoutCertificate]
+
+Deploying stack: DealRoom
+Changes: 28 to create, 0 to update, 0 to delete
+Deploying 28 resource(s) (DAG: 7 levels, max parallel: 20)
+Failed to create CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092: Failed to create IAM role CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092: EntityAlreadyExistsException. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092: the name AWS reports as taken (DealRoom-CustomS3AutoDeleteObjectsCustomResourcePro-de566b09c26d) is one cdkd DERIVED from the logical id, and that derivation has no random component — so this is most likely a resource an earlier cdkd run left behind. A rollback leaves a resource carrying DeletionPolicy: Retain in AWS and drops it from state, as CloudFormation does; what differs is the name. CloudFormation would generate a fresh one for an unnamed resource and redeploy clean, whereas cdkd asks again for the name the orphan still holds — so re-running does not clear this. To recover, adopt it back into state instead of re-creating it, with the command below (a selective import merges into existing state and needs no --force while the resource is absent from it). CONFIRM IT IS YOURS FIRST — a name cdkd derives is predictable, so for a globally-namespaced type it can belong to another account, and the same stack deployed in another region derives the same name. If it is not a resource you want to keep, delete DealRoom-CustomS3AutoDeleteObjectsCustomResourcePro-de566b09c26d in AWS — after confirming it holds nothing you need, since Retain is what kept it — and re-deploy.
+Adopt with: cdkd import DealRoom --resource 'CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092=DealRoom-CustomS3AutoDeleteObjectsCustomResourcePro-de566b09c26d'
+Failed to create CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F: Failed to create IAM role CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F: EntityAlreadyExistsException. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F: the name AWS reports as taken (DealRoom-CustomCDKBucketDeployment8693BB64968944B69-2bd4aeaaa758) is one cdkd DERIVED from the logical id, and that derivation has no random component — so this is most likely a resource an earlier cdkd run left behind. A rollback leaves a resource carrying DeletionPolicy: Retain in AWS and drops it from state, as CloudFormation does; what differs is the name. CloudFormation would generate a fresh one for an unnamed resource and redeploy clean, whereas cdkd asks again for the name the orphan still holds — so re-running does not clear this. To recover, adopt it back into state instead of re-creating it, with the command below (a selective import merges into existing state and needs no --force while the resource is absent from it). CONFIRM IT IS YOURS FIRST — a name cdkd derives is predictable, so for a globally-namespaced type it can belong to another account, and the same stack deployed in another region derives the same name. If it is not a resource you want to keep, delete DealRoom-CustomCDKBucketDeployment8693BB64968944B69-2bd4aeaaa758 in AWS — after confirming it holds nothing you need, since Retain is what kept it — and re-deploy.
+Adopt with: cdkd import DealRoom --resource 'CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F=DealRoom-CustomCDKBucketDeployment8693BB64968944B69-2bd4aeaaa758'
+Failed to create ApiFunctionServiceRole52B9747B: Failed to create IAM role ApiFunctionServiceRole52B9747B: EntityAlreadyExistsException. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+ApiFunctionServiceRole52B9747B: the name AWS reports as taken (DealRoom-ApiFunctionServiceRole52B9747B-b4fe39d1cd50) is one cdkd DERIVED from the logical id, and that derivation has no random component — so this is most likely a resource an earlier cdkd run left behind. A rollback leaves a resource carrying DeletionPolicy: Retain in AWS and drops it from state, as CloudFormation does; what differs is the name. CloudFormation would generate a fresh one for an unnamed resource and redeploy clean, whereas cdkd asks again for the name the orphan still holds — so re-running does not clear this. To recover, adopt it back into state instead of re-creating it, with the command below (a selective import merges into existing state and needs no --force while the resource is absent from it). CONFIRM IT IS YOURS FIRST — a name cdkd derives is predictable, so for a globally-namespaced type it can belong to another account, and the same stack deployed in another region derives the same name. If it is not a resource you want to keep, delete DealRoom-ApiFunctionServiceRole52B9747B-b4fe39d1cd50 in AWS — after confirming it holds nothing you need, since Retain is what kept it — and re-deploy.
+Adopt with: cdkd import DealRoom --resource 'ApiFunctionServiceRole52B9747B=DealRoom-ApiFunctionServiceRole52B9747B-b4fe39d1cd50'
+Failed to create DistributionOrigin1S3OriginAccessControlEB606076: Failed to create CloudFront Origin Access Control DistributionOrigin1S3OriginAccessControlEB606076: OriginAccessControlAlreadyExists. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+Failed to create DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1: Failed to create CloudFront Origin Access Control DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1: OriginAccessControlAlreadyExists. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+Failed to create DealRecordsE92ACED8: Failed to create DynamoDB table DealRecordsE92ACED8: ResourceInUseException. Re-run with --verbose for AWS's own message. AWS reports that it already exists.
+DealRecordsE92ACED8: the name AWS reports as taken (DealRoom-DealRecordsE92ACED8-43d519718cde) is one cdkd DERIVED from the logical id, and that derivation has no random component — so this is most likely a resource an earlier cdkd run left behind. A rollback leaves a resource carrying DeletionPolicy: Retain in AWS and drops it from state, as CloudFormation does; what differs is the name. CloudFormation would generate a fresh one for an unnamed resource and redeploy clean, whereas cdkd asks again for the name the orphan still holds — so re-running does not clear this. To recover, adopt it back into state instead of re-creating it, with the command below (a selective import merges into existing state and needs no --force while the resource is absent from it). CONFIRM IT IS YOURS FIRST — a name cdkd derives is predictable, so for a globally-namespaced type it can belong to another account, and the same stack deployed in another region derives the same name. If it is not a resource you want to keep, delete DealRoom-DealRecordsE92ACED8-43d519718cde in AWS — after confirming it holds nothing you need, since Retain is what kept it — and re-deploy.
+Adopt with: cdkd import DealRoom --resource 'DealRecordsE92ACED8=DealRoom-DealRecordsE92ACED8-43d519718cde'
+[1/28] ✓ Users0A0EEA89 (AWS::Cognito::UserPool) created
+[2/28] ✓ ApiLogs3D05D88B (AWS::Logs::LogGroup) created
+[3/28] ✓ ApiCachePolicyF71AA3E6 (AWS::CloudFront::CachePolicy) created
+[4/28] ✓ DeployAssetsAwsCliLayer986E51B7 (AWS::Lambda::LayerVersion) created
+Failed to create SiteBucket397A1860: SiteBucket397A1860 (AWS::S3::Bucket) would be created with the cdkd-generated BucketName dealroom-sitebucket397a1860-8e1d2e642ceb, which an existing resource (dealroom-sitebucket397a1860-8e1d2e642ceb) already holds. This stack's create-token ledger records that a deploy of this stack that was killed or force-unlocked sent this name, but this type reports no creation time, so cdkd cannot tell that resource is the one it made rather than another deployment's created since. Since its create API hands back or overwrites an existing resource of that name instead of refusing it, creating it would take that resource over. SiteBucket397A1860 was not created. The likely cause: the resource is this stack's own, from that deploy. If it is, adopt it with `cdkd import DealRoom --resource 'SiteBucket397A1860=dealroom-sitebucket397a1860-8e1d2e642ceb' --state-bucket cdkd-state-<ACCOUNT_ID>` and re-run; if it is not, this stack is also deployed under another state backend.
+Rolling back 4 completed operation(s)...
+  Rollback: Leaving Users0A0EEA89 (AWS::Cognito::UserPool) in AWS (DeletionPolicy: Retain) — removed from state
+  Rollback: Deleting created resource ApiLogs3D05D88B (AWS::Logs::LogGroup)
+  Rollback: ApiLogs3D05D88B deleted successfully
+  Rollback: Deleting created resource ApiCachePolicyF71AA3E6 (AWS::CloudFront::CachePolicy)
+  Rollback: ApiCachePolicyF71AA3E6 deleted successfully
+  Rollback: Deleting created resource DeployAssetsAwsCliLayer986E51B7 (AWS::Lambda::LayerVersion)
+  Rollback: DeployAssetsAwsCliLayer986E51B7 deleted successfully
+Rollback completed. Some resources may remain if deletion failed.
+The automatic rollback restored the pre-deploy state. The failed resource's pre-failure record was kept — if it was left partially applied, revert it.
+Revert it with: cdkd rollback DealRoom --revert-failed
+Failed: stack:DealRoom: Failed to create resource CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
+Error: 1 node(s) failed:
+  - stack:DealRoom: Failed to create resource CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092
+----------------------------------------
+finished_at: 2026-11-17T14:09:54Z
+duration:    94s
+result:      失敗（exit 1）

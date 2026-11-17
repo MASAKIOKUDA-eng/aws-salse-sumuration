@@ -1,0 +1,115 @@
+# cdkd deploy log
+started_at: 2026-11-17T14:11:39Z
+commit:     747e341 (feature/deal-room-simulator)
+region:     ap-northeast-1
+caller:     arn:aws:sts::<ACCOUNT_ID>:assumed-role/EC2-Administrator-Access/i-0f97674804a3a4735
+command:    cdkd deploy --all 
+----------------------------------------
+built /home/ec2-user/aws-salse-sumuration/web/dist
+Synthesizing CDK app...
+Bundling asset DealRoom/ApiFunction/Code/Stage...
+...dd88dd31c23705f347f8443affd7572170d24c87c2d2f03-building/index.js  64.9kb
+
+⚡ Done in 17ms
+[Warning at /DealRoom/Distribution] Ignoring 'minimumProtocolVersion': it has no effect without a custom 'certificate'. The distribution uses the CloudFront default certificate, whose security policy is fixed at TLSv1. [ack: @aws-cdk/aws-cloudfront:minimumProtocolVersionWithoutCertificate]
+
+Deploying stack: DealRoom
+A previous deploy of DealRoom failed and was automatically rolled back. The failed resource may be partially applied — revert it, or continue deploying to fix forward (a successful deploy clears this note).
+Revert it with: cdkd rollback DealRoom --revert-failed
+Users0A0EEA89 (AWS::Cognito::UserPool) was left in AWS by an earlier rollback as ap-northeast-1_3vImZTVhF (DeletionPolicy: Retain). This deploy does not take it back: it creates a new resource under a new name, as CloudFormation does. To manage the kept resource again, adopt it with 'cdkd import'.
+Changes: 28 to create, 0 to update, 0 to delete
+Deploying 28 resource(s) (DAG: 7 levels, max parallel: 20)
+[1/28] ✓ DistributionOrigin1S3OriginAccessControlEB606076 (AWS::CloudFront::OriginAccessControl) created
+[2/28] ✓ DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1 (AWS::CloudFront::OriginAccessControl) created
+[3/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F (AWS::IAM::Role) created
+[4/28] ✓ CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092 (AWS::IAM::Role) created
+[5/28] ✓ ApiFunctionServiceRole52B9747B (AWS::IAM::Role) created
+[6/28] ✓ Users0A0EEA89 (AWS::Cognito::UserPool) created
+[7/28] ✓ ApiLogs3D05D88B (AWS::Logs::LogGroup) created
+[8/28] ✓ ApiCachePolicyF71AA3E6 (AWS::CloudFront::CachePolicy) created
+[9/28] ✓ SiteBucket397A1860 (AWS::S3::Bucket) created
+[10/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleDefaultPolicyE5468F0E (AWS::IAM::Policy) created
+[11/28] ✓ UsersLoginDomain920528C5 (AWS::Cognito::UserPoolDomain) created
+[12/28] ✓ DeployAssetsAwsCliLayer986E51B7 (AWS::Lambda::LayerVersion) created
+[13/28] ✓ CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiB5F7BD223 (AWS::Lambda::Function) created
+[14/28] ✓ CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F (AWS::Lambda::Function) created
+[15/28] ✓ DealRecordsE92ACED8 (AWS::DynamoDB::Table) created
+[16/28] ✓ ApiFunctionServiceRoleDefaultPolicy20A32B8D (AWS::IAM::Policy) created
+[17/28] ✓ ApiFunctionCE271BD4 (AWS::Lambda::Function) created
+[18/28] ✓ ApiFunctionFunctionUrl73AD62DC (AWS::Lambda::Url) created
+CloudFront Distribution Distribution830FAC52 accepted (not waiting for Deployed; pass --full-wait to wait). To wait manually: aws cloudfront wait distribution-deployed --id E1T5K9SWOOE8A3
+[19/28] ✓ Distribution830FAC52 (AWS::CloudFront::Distribution) created
+[20/28] ✓ DistributionOrigin2InvokeFromApiForDealRoomDistributionOrigin25C254B4744C50812 (AWS::Lambda::Permission) created
+[21/28] ✓ DistributionOrigin2InvokeFunctionFromCloudFrontForDealRoomDistributionOrigin25C254B473DDB2117 (AWS::Lambda::Permission) created
+[22/28] ✓ SiteBucketPolicy3AC1D0F8 (AWS::S3::BucketPolicy) created
+[23/28] ✓ UsersWebClient8EE36D42 (AWS::Cognito::UserPoolClient) created
+[24/28] ✓ SiteBucketAutoDeleteObjectsCustomResource9585E968 (Custom::S3AutoDeleteObjects) created
+[25/28] ✓ LoginBranding (AWS::Cognito::ManagedLoginBranding) created
+[26/28] ✓ DeployAssetsCustomResource256MiBAD7FBCF5 (Custom::CDKBucketDeployment) created
+[27/28] ✓ DeploySiteAwsCliLayer88B0EBE2 (AWS::Lambda::LayerVersion) created
+Custom resource Create for DeploySiteCustomResource256MiB2424C2DD failed and cdkd could not classify the reason. Log tail from the DISPATCH invocation (for the CDK Provider framework's async pattern the failure may have occurred in a later execution, whose log this is not):
+b137863bef761c11211230dcdef9138fc62e87980a4332.zip%20/tmp/tmped7qur_k/35b8b3da-de1d-480f-ae93-4a7c4ffde79a Completed 31.2 KiB/31.2 KiB (150.2 KiB/s) with 1 file(s) remaining download: s3://cdkd-assets-<ACCOUNT_ID>-ap-northeast-1/daf6ce946039f7b25eb137863bef761c11211230dcdef9138fc62e87980a4332.zip to ../../tmp/tmped7qur_k/35b8b3da-de1d-480f-ae93-4a7c4ffde79a [INFO] 2026-11-17T14:12:48.105Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | extracting archive to: /tmp/tmped7qur_k/contents  [INFO] 2026-11-17T14:12:48.105Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | markers: {} [INFO] 2026-11-17T14:12:48.106Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee archive: /tmp/tmped7qur_k/8c96c5c0-6d3b-451c-aa90-2e54e9530770 [INFO] 2026-11-17T14:12:48.106Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | aws s3%20cp%20s3%3A//cdkd-assets-<ACCOUNT_ID>-ap-northeast-1/d7bb31ed9bb6bf2ba4bf27c65fcfb63ca72aeb8b452855a15cab4521c97099d1.zip%20/tmp/tmped7qur_k/8c96c5c0-6d3b-451c-aa90-2e54e9530770 Completed 233 Bytes/233 Bytes (1.1 KiB/s) with 1 file(s) remaining download: s3://cdkd-assets-<ACCOUNT_ID>-ap-northeast-1/d7bb31ed9bb6bf2ba4bf27c65fcfb63ca72aeb8b452855a15cab4521c97099d1.zip to ../../tmp/tmped7qur_k/8c96c5c0-6d3b-451c-aa90-2e54e9530770 [INFO] 2026-11-17T14:12:58.320Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | extracting archive to: /tmp/tmped7qur_k/contents  [INFO] 2026-11-17T14:12:58.320Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | markers: %7B%27%3C%3Cmarker%3A0xbaba%3A0%3E%3E%27%3A%20%27dealroom-<ACCOUNT_ID>-c8cffbf7%27%2C%20%27%3C%3Cmarker%3A0xbaba%3A1%3E%3E%27%3A%20%276dcotp60me8e975nu51qvk2f3o%27%7D [ERROR] 2026-11-17T14:12:58.321Z ab1e5696-43f4-43ac-ab69-fd9a18ca93ee | unhandled error: %27bool%27%20object%20has%20no%20attribute%20%27lower%27 Traceback (most recent call last):   File "/var/task/index.py", line 144, in handler     s3_deploy(s3_source_zips, s3_dest, user_metadata, system_metadata, prune, exclude, include, source_markers, extract, source_markers_config)     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
+Failed to create DeploySiteCustomResource256MiB2424C2DD: Failed to create custom resource DeploySiteCustomResource256MiB2424C2DD: Custom resource handler returned FAILED: 'bool' object has no attribute 'lower'
+Rolling back 27 completed operation(s)...
+  Rollback: Deleting created resource UsersLoginDomain920528C5 (AWS::Cognito::UserPoolDomain)
+  Rollback: UsersLoginDomain920528C5 deleted successfully
+  Rollback: Deleting created resource DistributionOrigin2InvokeFromApiForDealRoomDistributionOrigin25C254B4744C50812 (AWS::Lambda::Permission)
+  Rollback: DistributionOrigin2InvokeFromApiForDealRoomDistributionOrigin25C254B4744C50812 deleted successfully
+  Rollback: Deleting created resource DistributionOrigin2InvokeFunctionFromCloudFrontForDealRoomDistributionOrigin25C254B473DDB2117 (AWS::Lambda::Permission)
+  Rollback: DistributionOrigin2InvokeFunctionFromCloudFrontForDealRoomDistributionOrigin25C254B473DDB2117 deleted successfully
+  Rollback: Deleting created resource SiteBucketAutoDeleteObjectsCustomResource9585E968 (Custom::S3AutoDeleteObjects)
+  Rollback: SiteBucketAutoDeleteObjectsCustomResource9585E968 deleted successfully
+  Rollback: Deleting created resource LoginBranding (AWS::Cognito::ManagedLoginBranding)
+  Rollback: LoginBranding deleted successfully
+  Rollback: Deleting created resource DeploySiteAwsCliLayer88B0EBE2 (AWS::Lambda::LayerVersion)
+  Rollback: DeploySiteAwsCliLayer88B0EBE2 deleted successfully
+  Rollback: Deleting created resource CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F (AWS::Lambda::Function)
+  Rollback: CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F deleted successfully
+  Rollback: Deleting created resource SiteBucketPolicy3AC1D0F8 (AWS::S3::BucketPolicy)
+  Rollback: SiteBucketPolicy3AC1D0F8 deleted successfully
+  Rollback: Deleting created resource UsersWebClient8EE36D42 (AWS::Cognito::UserPoolClient)
+  Rollback: UsersWebClient8EE36D42 deleted successfully
+  Rollback: Deleting created resource DeployAssetsCustomResource256MiBAD7FBCF5 (Custom::CDKBucketDeployment)
+  Rollback: DeployAssetsCustomResource256MiBAD7FBCF5 deleted successfully
+  Rollback: Deleting created resource CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092 (AWS::IAM::Role)
+  Rollback: CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092 deleted successfully
+  Rollback: Deleting created resource CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiB5F7BD223 (AWS::Lambda::Function)
+  Rollback: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiB5F7BD223 deleted successfully
+  Rollback: Deleting created resource Distribution830FAC52 (AWS::CloudFront::Distribution)
+  Rollback: Distribution830FAC52 deleted successfully
+  Rollback: Deleting created resource DistributionOrigin1S3OriginAccessControlEB606076 (AWS::CloudFront::OriginAccessControl)
+  Rollback: DistributionOrigin1S3OriginAccessControlEB606076 deleted successfully
+  Rollback: Deleting created resource DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1 (AWS::CloudFront::OriginAccessControl)
+  Rollback: DistributionOrigin2FunctionUrlOriginAccessControlAC8EE0B1 deleted successfully
+  Rollback: Deleting created resource ApiCachePolicyF71AA3E6 (AWS::CloudFront::CachePolicy)
+  Rollback: ApiCachePolicyF71AA3E6 deleted successfully
+  Rollback: Deleting created resource CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleDefaultPolicyE5468F0E (AWS::IAM::Policy)
+  Rollback: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleDefaultPolicyE5468F0E deleted successfully
+  Rollback: Deleting created resource DeployAssetsAwsCliLayer986E51B7 (AWS::Lambda::LayerVersion)
+  Rollback: DeployAssetsAwsCliLayer986E51B7 deleted successfully
+  Rollback: Deleting created resource ApiFunctionFunctionUrl73AD62DC (AWS::Lambda::Url)
+  Rollback: ApiFunctionFunctionUrl73AD62DC deleted successfully
+  Rollback: Deleting created resource CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F (AWS::IAM::Role)
+  Rollback: CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C256MiBServiceRoleF991ED9F deleted successfully
+  Rollback: Deleting created resource SiteBucket397A1860 (AWS::S3::Bucket)
+  Rollback: SiteBucket397A1860 deleted successfully
+  Rollback: Deleting created resource ApiFunctionCE271BD4 (AWS::Lambda::Function)
+  Rollback: ApiFunctionCE271BD4 deleted successfully
+  Rollback: Leaving Users0A0EEA89 (AWS::Cognito::UserPool) in AWS (DeletionPolicy: Retain) — removed from state
+  Rollback: Deleting created resource ApiLogs3D05D88B (AWS::Logs::LogGroup)
+  Rollback: ApiLogs3D05D88B deleted successfully
+  Rollback: Deleting created resource ApiFunctionServiceRoleDefaultPolicy20A32B8D (AWS::IAM::Policy)
+  Rollback: ApiFunctionServiceRoleDefaultPolicy20A32B8D deleted successfully
+  Rollback: Deleting created resource ApiFunctionServiceRole52B9747B (AWS::IAM::Role)
+  Rollback: ApiFunctionServiceRole52B9747B deleted successfully
+  Rollback: Leaving DealRecordsE92ACED8 (AWS::DynamoDB::Table) in AWS (DeletionPolicy: Retain) — removed from state
+Rollback completed. Some resources may remain if deletion failed.
+The automatic rollback restored the pre-deploy state. The failed resource's pre-failure record was kept — if it was left partially applied, revert it.
+Revert it with: cdkd rollback DealRoom --revert-failed
+Failed: stack:DealRoom: Failed to create resource DeploySiteCustomResource256MiB2424C2DD
+Error: 1 node(s) failed:
+  - stack:DealRoom: Failed to create resource DeploySiteCustomResource256MiB2424C2DD
+----------------------------------------
+finished_at: 2026-11-17T14:16:33Z
+duration:    292s
+result:      失敗（exit 1）
