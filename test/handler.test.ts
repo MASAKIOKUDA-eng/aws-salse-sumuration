@@ -77,7 +77,10 @@ describe('POST /api/deals', () => {
 
   it('ログインしていない・トークンが不正なら 401 で保存しない', async () => {
     const payload = { playerName: 'a', seed: 1, decisions };
-    expect((await handler(event('POST', '/api/deals', payload))).statusCode).toBe(401);
+    const res = await handler(event('POST', '/api/deals', payload));
+    expect(res.statusCode).toBe(401);
+    // 画面が選んだ言語の文言に置き換えられるよう、エラーにはコードを付ける
+    expect(JSON.parse(res.body).code).toBe('login_required');
     expect((await handler(event('POST', '/api/deals', payload, undefined, { 'x-auth-token': 'forged' }))).statusCode).toBe(401);
     expect(send).not.toHaveBeenCalled();
   });

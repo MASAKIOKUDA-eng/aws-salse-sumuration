@@ -36,8 +36,10 @@ import {
   URGENCIES,
   type Urgency,
 } from './scenarios';
+import { type Lang, content } from './content';
 
 export * from './scenarios';
+export * from './content';
 
 // ---------- 条件 ----------
 
@@ -250,8 +252,9 @@ export interface ServiceFit {
   extra: ServiceId[];
 }
 
-export function serviceFit(c: Conditions, services: readonly ServiceId[]): ServiceFit {
+export function serviceFit(c: Conditions, services: readonly ServiceId[], lang: Lang = 'ja'): ServiceFit {
   const sc = SCENARIOS[c.scenario];
+  const labels = content(lang).SCENARIOS[c.scenario].coreLabels;
   const used = new Set<ServiceId>();
   const missing: string[] = [];
   let coreHit = 0;
@@ -260,7 +263,7 @@ export function serviceFit(c: Conditions, services: readonly ServiceId[]): Servi
     if (hit) {
       used.add(hit);
       coreHit++;
-    } else missing.push(sc.coreLabels[i]);
+    } else missing.push(labels[i]);
   });
   const good = services.filter((s) => !used.has(s) && sc.good.includes(s));
   good.forEach((s) => used.add(s));
@@ -271,22 +274,128 @@ export function serviceFit(c: Conditions, services: readonly ServiceId[]): Servi
   return { score: clamp(round(score)), coreHit, missing, extra };
 }
 
-const RANKS: { min: number; rank: Rank; title: string }[] = [
-  { min: 90, rank: 'S', title: 'ストラテジック・アカウントマネージャー' },
-  { min: 78, rank: 'A', title: 'シニア・アカウントマネージャー' },
-  { min: 65, rank: 'B', title: 'アカウントマネージャー' },
-  { min: 50, rank: 'C', title: 'アソシエイト' },
-  { min: 0, rank: 'D', title: '要コーチング' },
+const RANKS: { min: number; rank: Rank; title: Record<Lang, string> }[] = [
+  { min: 90, rank: 'S', title: { ja: 'ストラテジック・アカウントマネージャー', en: 'Strategic Account Manager' } },
+  { min: 78, rank: 'A', title: { ja: 'シニア・アカウントマネージャー', en: 'Senior Account Manager' } },
+  { min: 65, rank: 'B', title: { ja: 'アカウントマネージャー', en: 'Account Manager' } },
+  { min: 50, rank: 'C', title: { ja: 'アソシエイト', en: 'Associate' } },
+  { min: 0, rank: 'D', title: { ja: '要コーチング', en: 'Needs coaching' } },
 ];
 
-export function rankOf(total: number) {
-  return RANKS.find((r) => total >= r.min)!;
+export function rankOf(total: number, lang: Lang = 'ja'): { min: number; rank: Rank; title: string } {
+  const r = RANKS.find((x) => total >= x.min)!;
+  return { min: r.min, rank: r.rank, title: r.title[lang] };
 }
+
+// ---------- フィードバックの文言 ----------
+
+const MSG = {
+  ja: {
+    area: {
+      research: '事前調査',
+      questions: 'ヒアリング',
+      problem: '課題の特定',
+      services: '提案構成',
+      approach: '進め方',
+      team: '同行メンバー',
+      cost: '費用',
+      pricing: '費用の出し方',
+      close: 'クロージング',
+    },
+    objectionArea: (title: string) => `反論：${title}`,
+    researchGood: '商談の前に、顧客が何に投資しようとしているかをつかめていました。',
+    researchWarn: '調べた情報が商談の核心に届いていませんでした。経営計画や既存の契約状況は、提案のタイミングを左右します。',
+    noPain: '「いま一番困っていること」を聞かずに提案に進みました。課題が分からないままでは、提案は機能の紹介に終わります。',
+    questionsGood: 'この顧客にとって重要な質問を選べていました。',
+    questionsWarn: '質問の優先順位を見直しましょう。',
+    hint: {
+      budget: '予算が厳しい顧客には、予算の考え方を早めに確認しましょう。',
+      decision: '比較検討や費用に厳しい決裁者がいるときは、誰がどう決めるかの確認が欠かせません。',
+      timeline: '急ぎの案件では、期限を確かめないと進め方を誤ります。',
+      constraint: '規制や技術の制約は、提案の前提を変えます。',
+      goal: 'ビジネスゴールが分からないと、投資対効果を語れません。',
+    } as Partial<Record<QuestionId, string>>,
+    problemGood: '表面の症状ではなく、事業への影響まで含めて課題を言語化できました。',
+    problemWarn: (p: string) => `「${p}」は症状の 1 つです。顧客が本当に困っているのは、それによって事業に何が起きているかです。`,
+    problemBad: '顧客の言葉から離れた課題設定になりました。ヒアリングで聞いた「困りごと」に立ち返りましょう。',
+    servicesGood: '課題に必要な要素を過不足なく組み合わせた構成でした。',
+    servicesMissing: (missing: string[]) => `「${missing.join('」「')}」が欠けていました。課題を解くのに必要な部品から考えましょう。`,
+    servicesExtra: (names: string[]) => `${names.join('、')} はこの課題には関係が薄く、提案の焦点がぼやけました。`,
+    approachGood: '顧客の状況に合った進め方でした。',
+    approachBigbang: '一斉移行はリスクが大きく、決裁者は承認しにくくなります。',
+    approachWarn: 'もっと顧客が「始めやすい」進め方がありました。効果を確かめる段階を設けると、承認のハードルが下がります。',
+    teamGood: 'この案件に必要な専門性を持つメンバーを連れて行けました。',
+    teamWarn:
+      '同行メンバーの専門性が課題とずれていました。IoT・AI のような専門領域ではスペシャリストを、大規模な移行や統制ではプロフェッショナルサービスを頼りましょう。',
+    overBudget: (cost: number, cap: number) => `構成の費用が顧客の予算感（${cap}）を超えました（${cost}）。必要な機能に絞るか、段階的に導入しましょう。`,
+    pricingGood: '顧客の財務の事情に合った費用の出し方でした。',
+    pricingEarlyCommit: '効果を確かめる前に長期の利用を約束させるのは早すぎます。まずはオンデマンドや支援策で始めましょう。',
+    pricingDiscount: '値引きは最後の手段です。支援策や料金プランで、値引きに頼らず価値を示しましょう。',
+    pricingWarn: '使える支援策や料金プランを活かしきれていませんでした。',
+    closeGood: '次の一歩を顧客と一緒に決められました。',
+    closePressure: '期限で迫る値引きは、顧客に「売り込まれた」という印象を残します。',
+    closeWait: '返事を待つだけでは、商談の主導権を失います。',
+    closeWarn: '次の一歩は作れましたが、顧客と成功条件を共有できるとさらに確度が上がります。',
+  },
+  en: {
+    area: {
+      research: 'Research',
+      questions: 'Discovery',
+      problem: 'Problem',
+      services: 'Solution',
+      approach: 'Approach',
+      team: 'Account team',
+      cost: 'Cost',
+      pricing: 'Pricing',
+      close: 'Closing',
+    },
+    objectionArea: (title: string) => `Objection: ${title}`,
+    researchGood: 'Before the meeting, you understood what the customer intends to invest in.',
+    researchWarn:
+      'Your research missed the heart of the deal. Business plans and current contracts decide when a proposal can land.',
+    noPain:
+      'You moved on to a proposal without asking about their biggest problem. Without knowing the problem, a proposal is just a feature tour.',
+    questionsGood: 'You chose the questions that mattered most for this customer.',
+    questionsWarn: 'Rethink which questions to ask first.',
+    hint: {
+      budget: 'With a customer on a tight budget, ask early how they think about budget.',
+      decision: 'When there is a competing option or a cost-conscious decision maker, you must confirm who decides and how.',
+      timeline: 'On an urgent deal, you will pick the wrong approach unless you confirm the deadline.',
+      constraint: 'Regulatory and technical constraints change the premises of the proposal.',
+      goal: 'Without knowing the business goal, you cannot talk about return on investment.',
+    } as Partial<Record<QuestionId, string>>,
+    problemGood: 'You put the problem into words, including its impact on the business, not just the surface symptom.',
+    problemWarn: (p: string) => `“${p}” is one of the symptoms. What really hurts the customer is what it does to their business.`,
+    problemBad: 'Your problem statement drifted away from the customer’s own words. Go back to the pain you heard in discovery.',
+    servicesGood: 'Your solution had exactly the pieces the problem needed, nothing missing and nothing extra.',
+    servicesMissing: (missing: string[]) =>
+      `Missing: ${missing.map((x) => `“${x}”`).join(', ')}. Start from the pieces needed to solve the problem.`,
+    servicesExtra: (names: string[]) => `${names.join(', ')} ${names.length > 1 ? 'have' : 'has'} little to do with this problem and blurred the focus of the proposal.`,
+    approachGood: 'Your approach fit the customer’s situation.',
+    approachBigbang: 'Migrating everything at once is risky, and decision makers find it hard to approve.',
+    approachWarn: 'There was an easier way for the customer to get started. A stage that proves the value lowers the bar for approval.',
+    teamGood: 'You brought people with the expertise this deal needed.',
+    teamWarn:
+      'Your team’s expertise didn’t match the problem. Bring specialists for fields like IoT and AI, and Professional Services for large migrations and governance.',
+    overBudget: (cost: number, cap: number) =>
+      `The solution cost (${cost}) exceeded the customer’s budget (${cap}). Focus on what is needed, or roll it out in stages.`,
+    pricingGood: 'Your pricing fit the customer’s financial situation.',
+    pricingEarlyCommit: 'Asking for a long-term commitment before proving the value is too early. Start with On-Demand or funding programs.',
+    pricingDiscount: 'Discounts are the last resort. Show value with funding programs and pricing models instead.',
+    pricingWarn: 'You didn’t make full use of the funding programs and pricing models available.',
+    closeGood: 'You agreed on the next step together with the customer.',
+    closePressure: 'A discount with a deadline leaves the customer feeling they were sold to.',
+    closeWait: 'Just waiting for an answer means losing control of the deal.',
+    closeWarn: 'You set up a next step, but sharing success criteria with the customer would raise your odds further.',
+  },
+} satisfies Record<Lang, unknown>;
 
 const WIN_THRESHOLD: Record<Competitor, number> = { none: 64, onprem: 68, othercloud: 72 };
 
-export function simulate(c: Conditions, d: Decisions): DealResult {
+export function simulate(c: Conditions, d: Decisions, lang: Lang = 'ja'): DealResult {
   const sc = SCENARIOS[c.scenario];
+  const t = content(lang);
+  const m = MSG[lang];
   const reviews: Review[] = [];
   const say = (area: string, tone: Review['tone'], text: string) => reviews.push({ area, tone, text });
 
@@ -297,42 +406,35 @@ export function simulate(c: Conditions, d: Decisions): DealResult {
   const problem = sc.problems[d.problem].score;
   const discovery = round(research * 0.25 + questions * 0.4 + problem * 0.35);
 
-  if (research >= 90) say('事前調査', 'good', '商談の前に、顧客が何に投資しようとしているかをつかめていました。');
-  else say('事前調査', 'warn', '調べた情報が商談の核心に届いていませんでした。経営計画や既存の契約状況は、提案のタイミングを左右します。');
-  if (!d.questions.includes('pain')) say('ヒアリング', 'bad', '「いま一番困っていること」を聞かずに提案に進みました。課題が分からないままでは、提案は機能の紹介に終わります。');
-  else if (questions >= 90) say('ヒアリング', 'good', 'この顧客にとって重要な質問を選べていました。');
+  if (research >= 90) say(m.area.research, 'good', m.researchGood);
+  else say(m.area.research, 'warn', m.researchWarn);
+  if (!d.questions.includes('pain')) say(m.area.questions, 'bad', m.noPain);
+  else if (questions >= 90) say(m.area.questions, 'good', m.questionsGood);
   else {
     const missed = (Object.entries(qw) as [QuestionId, number][])
       .filter(([q, w]) => w >= 75 && !d.questions.includes(q))
       .map(([q]) => q);
-    const hint: Partial<Record<QuestionId, string>> = {
-      budget: '予算が厳しい顧客には、予算の考え方を早めに確認しましょう。',
-      decision: '比較検討や費用に厳しい決裁者がいるときは、誰がどう決めるかの確認が欠かせません。',
-      timeline: '急ぎの案件では、期限を確かめないと進め方を誤ります。',
-      constraint: '規制や技術の制約は、提案の前提を変えます。',
-      goal: 'ビジネスゴールが分からないと、投資対効果を語れません。',
-    };
-    say('ヒアリング', 'warn', missed.map((q) => hint[q]).filter(Boolean)[0] ?? '質問の優先順位を見直しましょう。');
+    say(m.area.questions, 'warn', missed.map((q) => m.hint[q]).filter(Boolean)[0] ?? m.questionsWarn);
   }
-  if (problem === 100) say('課題の特定', 'good', '表面の症状ではなく、事業への影響まで含めて課題を言語化できました。');
-  else if (problem >= 40) say('課題の特定', 'warn', `「${sc.problems[d.problem].text}」は症状の 1 つです。顧客が本当に困っているのは、それによって事業に何が起きているかです。`);
-  else say('課題の特定', 'bad', '顧客の言葉から離れた課題設定になりました。ヒアリングで聞いた「困りごと」に立ち返りましょう。');
+  if (problem === 100) say(m.area.problem, 'good', m.problemGood);
+  else if (problem >= 40) say(m.area.problem, 'warn', m.problemWarn(t.SCENARIOS[c.scenario].problems[d.problem].text));
+  else say(m.area.problem, 'bad', m.problemBad);
 
   // 2. 提案の適合（サービス・進め方・体制）
-  const fitInfo = serviceFit(c, d.services);
+  const fitInfo = serviceFit(c, d.services, lang);
   const approach = approachScore(c, d.approach);
   const team = bestOf(sc.weights.team, d.team, PICK.team);
   const fit = round(fitInfo.score * 0.55 + approach * 0.25 + team * 0.2);
 
-  if (fitInfo.missing.length === 0 && fitInfo.extra.length === 0) say('提案構成', 'good', '課題に必要な要素を過不足なく組み合わせた構成でした。');
-  if (fitInfo.missing.length > 0) say('提案構成', 'bad', `「${fitInfo.missing.join('」「')}」が欠けていました。課題を解くのに必要な部品から考えましょう。`);
+  if (fitInfo.missing.length === 0 && fitInfo.extra.length === 0) say(m.area.services, 'good', m.servicesGood);
+  if (fitInfo.missing.length > 0) say(m.area.services, 'bad', m.servicesMissing(fitInfo.missing));
   if (fitInfo.extra.length > 0)
-    say('提案構成', 'warn', `${fitInfo.extra.map((s) => SERVICES[s].name).join('、')} はこの課題には関係が薄く、提案の焦点がぼやけました。`);
-  if (approach >= 90) say('進め方', 'good', '顧客の状況に合った進め方でした。');
-  else if (d.approach === 'bigbang') say('進め方', 'bad', '一斉移行はリスクが大きく、決裁者は承認しにくくなります。');
-  else say('進め方', 'warn', 'もっと顧客が「始めやすい」進め方がありました。効果を確かめる段階を設けると、承認のハードルが下がります。');
-  if (team >= 90) say('同行メンバー', 'good', 'この案件に必要な専門性を持つメンバーを連れて行けました。');
-  else say('同行メンバー', 'warn', '同行メンバーの専門性が課題とずれていました。IoT・AI のような専門領域ではスペシャリストを、大規模な移行や統制ではプロフェッショナルサービスを頼りましょう。');
+    say(m.area.services, 'warn', m.servicesExtra(fitInfo.extra.map((s) => t.SERVICES[s].name)));
+  if (approach >= 90) say(m.area.approach, 'good', m.approachGood);
+  else if (d.approach === 'bigbang') say(m.area.approach, 'bad', m.approachBigbang);
+  else say(m.area.approach, 'warn', m.approachWarn);
+  if (team >= 90) say(m.area.team, 'good', m.teamGood);
+  else say(m.area.team, 'warn', m.teamWarn);
 
   // 3. 経済性（費用の出し方・予算との整合）
   const cost = costOf(d.services);
@@ -341,28 +443,28 @@ export function simulate(c: Conditions, d: Decisions): DealResult {
   const pricing = pricingScore(c, d);
   const commercial = round(pricing * 0.55 + budgetFit * 0.45);
 
-  if (cost > cap) say('費用', 'bad', `構成の費用が顧客の予算感（${cap}）を超えました（${cost}）。必要な機能に絞るか、段階的に導入しましょう。`);
-  if (pricing >= 90) say('費用の出し方', 'good', '顧客の財務の事情に合った費用の出し方でした。');
+  if (cost > cap) say(m.area.cost, 'bad', m.overBudget(cost, cap));
+  if (pricing >= 90) say(m.area.pricing, 'good', m.pricingGood);
   else if ((d.approach === 'poc' || d.approach === 'workshop') && d.pricing === 'savings')
-    say('費用の出し方', 'bad', '効果を確かめる前に長期の利用を約束させるのは早すぎます。まずはオンデマンドや支援策で始めましょう。');
-  else if (d.pricing === 'discount') say('費用の出し方', 'warn', '値引きは最後の手段です。支援策や料金プランで、値引きに頼らず価値を示しましょう。');
-  else say('費用の出し方', 'warn', '使える支援策や料金プランを活かしきれていませんでした。');
+    say(m.area.pricing, 'bad', m.pricingEarlyCommit);
+  else if (d.pricing === 'discount') say(m.area.pricing, 'warn', m.pricingDiscount);
+  else say(m.area.pricing, 'warn', m.pricingWarn);
 
   // 4. 信頼構築（反論への対応・クロージング）
   const objs = objectionsFor(c);
   const objScores = objs.map((o, i) => OBJECTIONS[o].responses[d.responses[i]].score);
   objs.forEach((o, i) => {
-    const r = OBJECTIONS[o].responses[d.responses[i]];
-    say(`反論：${OBJECTIONS[o].title}`, r.score >= 85 ? 'good' : r.score >= 50 ? 'warn' : 'bad', r.review);
+    const r = t.OBJECTIONS[o].responses[d.responses[i]];
+    say(m.objectionArea(t.OBJECTIONS[o].title), r.score >= 85 ? 'good' : r.score >= 50 ? 'warn' : 'bad', r.review);
   });
   const close = closeScore(c, d);
   const saBonus = c.stance === 'cto' && d.team.includes('sa') ? 5 : 0;
   const trust = clamp(round(((objScores[0] + objScores[1]) / 2) * 0.6 + close * 0.4 + saBonus));
 
-  if (close >= 90) say('クロージング', 'good', '次の一歩を顧客と一緒に決められました。');
-  else if (d.close === 'pressure') say('クロージング', 'bad', '期限で迫る値引きは、顧客に「売り込まれた」という印象を残します。');
-  else if (d.close === 'wait') say('クロージング', 'bad', '返事を待つだけでは、商談の主導権を失います。');
-  else say('クロージング', 'warn', '次の一歩は作れましたが、顧客と成功条件を共有できるとさらに確度が上がります。');
+  if (close >= 90) say(m.area.close, 'good', m.closeGood);
+  else if (d.close === 'pressure') say(m.area.close, 'bad', m.closePressure);
+  else if (d.close === 'wait') say(m.area.close, 'bad', m.closeWait);
+  else say(m.area.close, 'warn', m.closeWarn);
 
   const total = round(discovery * 0.25 + fit * 0.3 + commercial * 0.2 + trust * 0.25);
   const th = WIN_THRESHOLD[c.competitor];
@@ -370,7 +472,7 @@ export function simulate(c: Conditions, d: Decisions): DealResult {
   const won = winProbability >= 50;
   const priceFactor = d.pricing === 'discount' ? 0.8 : d.pricing === 'savings' ? 0.9 : 1;
   const arr = won ? round((sc.baseArr * (0.5 + fitInfo.score / 200) * priceFactor) / 10) * 10 : 0;
-  const r = rankOf(total);
+  const r = rankOf(total, lang);
 
   return {
     scores: { discovery, fit, commercial, trust },

@@ -81,16 +81,16 @@ function parseBody(event: LambdaFunctionURLEvent): unknown {
 
 async function createDeal(event: LambdaFunctionURLEvent): Promise<Result> {
   const sub = await authenticate(event);
-  if (!sub) return json(401, { message: '記録するにはログインが必要です' });
+  if (!sub) return json(401, { code: 'login_required', message: '記録するにはログインが必要です' });
 
   const body = parseBody(event) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object') return json(400, { message: 'リクエストの形式が正しくありません' });
+  if (!body || typeof body !== 'object') return json(400, { code: 'bad_request', message: 'リクエストの形式が正しくありません' });
 
   const playerName = cleanText(body.playerName, 20);
-  if (!playerName) return json(400, { message: '担当者名は 1〜20 文字で入力してください' });
-  if (!validateSeed(body.seed)) return json(400, { message: 'seed が不正です' });
+  if (!playerName) return json(400, { code: 'invalid_player_name', message: '担当者名は 1〜20 文字で入力してください' });
+  if (!validateSeed(body.seed)) return json(400, { code: 'invalid_seed', message: 'seed が不正です' });
   const decisions = validateDecisions(body.decisions);
-  if (!decisions.ok) return json(400, { message: decisions.error });
+  if (!decisions.ok) return json(400, { code: 'invalid_decisions', message: decisions.error });
 
   // クライアントの計算結果は信用せず、サーバーで再計算する
   const conditions = conditionsFromSeed(body.seed);
@@ -152,9 +152,9 @@ async function listRecent(limit: number, pk = PK) {
 }
 
 async function getDeal(id: string): Promise<Result> {
-  if (!ID_PATTERN.test(id)) return json(404, { message: '記録が見つかりません' });
+  if (!ID_PATTERN.test(id)) return json(404, { code: 'deal_not_found', message: '記録が見つかりません' });
   const out = await ddb.send(new GetCommand({ TableName: TABLE_NAME, Key: { pk: PK, sk: id } }));
-  if (!out.Item) return json(404, { message: '記録が見つかりません' });
+  if (!out.Item) return json(404, { code: 'deal_not_found', message: '記録が見つかりません' });
   return json(200, toPublic(out.Item), 60);
 }
 
@@ -177,7 +177,7 @@ export async function handler(event: LambdaFunctionURLEvent): Promise<Result> {
     }
     if (path === '/api/me/deals' && method === 'GET') {
       const sub = await authenticate(event);
-      if (!sub) return json(401, { message: 'ログインが必要です' });
+      if (!sub) return json(401, { code: 'login_required', message: 'ログインが必要です' });
       // 利用者ごとの内容のため、キャッシュさせない（no-store）
       return json(200, { items: await listRecent(50, userPk(sub)) });
     }
@@ -187,9 +187,9 @@ export async function handler(event: LambdaFunctionURLEvent): Promise<Result> {
       items.sort((a, b) => Number(b.total) - Number(a.total) || Number(b.arr) - Number(a.arr));
       return json(200, { items: items.slice(0, 10) }, 30);
     }
-    return json(404, { message: 'Not Found' });
+    return json(404, { code: 'not_found', message: 'Not Found' });
   } catch (err) {
     console.error(err);
-    return json(500, { message: 'サーバーでエラーが発生しました' });
+    return json(500, { code: 'server_error', message: 'サーバーでエラーが発生しました' });
   }
 }
